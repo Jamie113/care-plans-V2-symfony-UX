@@ -31,6 +31,9 @@ class TreatmentPlanBuilder
     public int $customDurationMonths = 6;
 
     #[LiveProp(writable: true)]
+    public bool $autoRenew = false;
+
+    #[LiveProp(writable: true)]
     public string $startBehaviour = 'immediately';
 
     #[LiveProp(writable: true)]
@@ -101,6 +104,29 @@ class TreatmentPlanBuilder
         );
     }
 
+    #[LiveAction]
+    public function setMedicationVariant(#[LiveArg] string $key, #[LiveArg] string $variantId): void
+    {
+        $this->medications = array_map(
+            fn($m) => $m['key'] === $key ? array_merge($m, ['variantId' => $variantId]) : $m,
+            $this->medications
+        );
+    }
+
+    #[LiveAction]
+    public function setMedicationProduct(#[LiveArg] string $key, #[LiveArg] string $medicationId): void
+    {
+        $this->medications = array_map(function ($m) use ($key, $medicationId) {
+            if ($m['key'] !== $key) return $m;
+            return array_merge($m, [
+                'medicationId'    => $medicationId,
+                'variantId'       => '',
+                'titrationPathId' => '',
+                'titrationEnabled' => false,
+            ]);
+        }, $this->medications);
+    }
+
     // ── Inclusion actions ─────────────────────────────────────────────────────
 
     #[LiveAction]
@@ -115,6 +141,15 @@ class TreatmentPlanBuilder
         $this->inclusions = array_values(
             array_filter($this->inclusions, fn($i) => $i['key'] !== $key)
         );
+    }
+
+    #[LiveAction]
+    public function setInclusionProduct(#[LiveArg] string $key, #[LiveArg] string $productId): void
+    {
+        $this->inclusions = array_map(function ($i) use ($key, $productId) {
+            if ($i['key'] !== $key) return $i;
+            return array_merge($i, ['productId' => $productId, 'variantId' => '']);
+        }, $this->inclusions);
     }
 
     #[LiveAction]
@@ -181,6 +216,15 @@ class TreatmentPlanBuilder
         $this->upsells = array_values(
             array_filter($this->upsells, fn($u) => $u['key'] !== $key)
         );
+    }
+
+    #[LiveAction]
+    public function setUpsellProduct(#[LiveArg] string $key, #[LiveArg] string $productId): void
+    {
+        $this->upsells = array_map(function ($u) use ($key, $productId) {
+            if ($u['key'] !== $key) return $u;
+            return array_merge($u, ['productId' => $productId, 'variantId' => '']);
+        }, $this->upsells);
     }
 
     #[LiveAction]
@@ -267,13 +311,13 @@ class TreatmentPlanBuilder
     public function getPrescriptionRenewalOptions(): array { return Catalogues::prescriptionRenewalOptions(); }
 
     #[ExposeInTemplate]
-    public function getInclusionCatalogue(): array { return Catalogues::inclusions(); }
+    public function getInclusionProducts(): array { return Catalogues::inclusionProducts(); }
 
     #[ExposeInTemplate]
     public function getInclusionCycleOptions(): array { return Catalogues::inclusionCycleOptions(); }
 
     #[ExposeInTemplate]
-    public function getAddonCatalogue(): array { return Catalogues::addons(); }
+    public function getAddonProducts(): array { return Catalogues::addonProducts(); }
 
     #[ExposeInTemplate]
     public function getOfferBillingCycleOptions(): array { return Catalogues::offerBillingCycleOptions(); }
@@ -321,6 +365,7 @@ class TreatmentPlanBuilder
         return [
             'key'              => bin2hex(random_bytes(8)),
             'medicationId'     => '',
+            'variantId'        => '',
             'titrationEnabled' => false,
             'titrationPathId'  => '',
             'quantityPerOrder' => 1,
@@ -335,9 +380,11 @@ class TreatmentPlanBuilder
     {
         return [
             'key'             => bin2hex(random_bytes(8)),
-            'itemId'          => '',
+            'productId'       => '',
+            'variantId'       => '',
             'scheduleType'    => 'specific_orders',
             'orderNumbers'    => [1],
+            'repeatOnRenewal' => false,
             'cycleId'         => '3m',
             'customCycleDays' => 90,
             'prescription'    => [
@@ -350,11 +397,14 @@ class TreatmentPlanBuilder
     private function newOfferItem(): array
     {
         return [
-            'key'               => bin2hex(random_bytes(8)),
-            'offerType'         => 'basket_value',
-            'price'             => 0.0,
-            'billingCycleId'    => 'monthly',
-            'customBillingDays' => 30,
+            'key'                        => bin2hex(random_bytes(8)),
+            'offerType'                  => 'basket_value',
+            'price'                      => 0.0,
+            'billingCycleId'             => 'monthly',
+            'customBillingDays'          => 30,
+            'allowBillingRescheduling'   => false,
+            'billingRescheduleDaysEarlier' => 5,
+            'billingRescheduleDaysLater'   => 10,
         ];
     }
 
@@ -362,7 +412,8 @@ class TreatmentPlanBuilder
     {
         return [
             'key'             => bin2hex(random_bytes(8)),
-            'itemId'          => '',
+            'productId'       => '',
+            'variantId'       => '',
             'scheduleType'    => 'specific_orders',
             'orderNumbers'    => [1],
             'cycleId'         => '3m',

@@ -4,26 +4,274 @@ namespace App\Catalogue;
 
 /**
  * Static catalogue data — mirrors src/constants/catalogues.js from the React prototype.
+ *
+ * All products live in a single products() array.
+ * Flags control which sections they appear in:
+ *   requiresPrescription  → shown in the Medications section
+ *   availableAsInclusion  → shown in the Inclusions section
+ *   availableAsUpsell     → shown in the Upsells section
  */
 final class Catalogues
 {
-    // ── Medications ──────────────────────────────────────────────────────────
+    // ── Unified product catalogue ─────────────────────────────────────────────
 
-    public static function medications(): array
+    public static function products(): array
     {
         return [
-            ['id' => 'mounjaro',  'name' => 'Mounjaro',   'variants' => ['2.5mg', '5mg', '7.5mg', '10mg', '12.5mg', '15mg'], 'requiresPrescriptionDefault' => true],
-            ['id' => 'wegovy',    'name' => 'Wegovy',     'variants' => ['0.25mg', '0.5mg', '1mg', '1.7mg', '2.4mg'],        'requiresPrescriptionDefault' => true],
-            ['id' => 'metformin', 'name' => 'Metformin',  'variants' => ['500mg', '850mg', '1000mg'],                         'requiresPrescriptionDefault' => false],
+
+            // ── Prescription medications ───────────────────────────────────────
+            [
+                'id'                   => 'mounjaro',
+                'name'                 => 'Mounjaro',
+                'category'             => 'medication',
+                'requiresPrescription' => true,
+                'availableAsInclusion' => false,
+                'availableAsUpsell'    => false,
+                'variants'             => [
+                    ['id' => 'mounjaro_2_5mg',  'name' => 'Mounjaro 2.5mg',  'dose' => '2.5mg',  'price' => 89.99],
+                    ['id' => 'mounjaro_5mg',    'name' => 'Mounjaro 5mg',    'dose' => '5mg',    'price' => 109.99],
+                    ['id' => 'mounjaro_7_5mg',  'name' => 'Mounjaro 7.5mg',  'dose' => '7.5mg',  'price' => 129.99],
+                    ['id' => 'mounjaro_10mg',   'name' => 'Mounjaro 10mg',   'dose' => '10mg',   'price' => 149.99],
+                    ['id' => 'mounjaro_12_5mg', 'name' => 'Mounjaro 12.5mg', 'dose' => '12.5mg', 'price' => 159.99],
+                    ['id' => 'mounjaro_15mg',   'name' => 'Mounjaro 15mg',   'dose' => '15mg',   'price' => 169.99],
+                ],
+            ],
+            [
+                'id'                   => 'wegovy',
+                'name'                 => 'Wegovy',
+                'category'             => 'medication',
+                'requiresPrescription' => true,
+                'availableAsInclusion' => false,
+                'availableAsUpsell'    => false,
+                'variants'             => [
+                    ['id' => 'wegovy_0_25mg', 'name' => 'Wegovy 0.25mg', 'dose' => '0.25mg', 'price' => 89.99],
+                    ['id' => 'wegovy_0_5mg',  'name' => 'Wegovy 0.5mg',  'dose' => '0.5mg',  'price' => 109.99],
+                    ['id' => 'wegovy_1mg',    'name' => 'Wegovy 1mg',    'dose' => '1mg',    'price' => 129.99],
+                    ['id' => 'wegovy_1_7mg',  'name' => 'Wegovy 1.7mg',  'dose' => '1.7mg',  'price' => 149.99],
+                    ['id' => 'wegovy_2_4mg',  'name' => 'Wegovy 2.4mg',  'dose' => '2.4mg',  'price' => 169.99],
+                ],
+            ],
+            [
+                'id'                   => 'metformin',
+                'name'                 => 'Metformin',
+                'category'             => 'medication',
+                'requiresPrescription' => true,
+                'availableAsInclusion' => false,
+                'availableAsUpsell'    => false,
+                'variants'             => [
+                    ['id' => 'metformin_500mg',  'name' => 'Metformin 500mg',  'dose' => '500mg',  'price' => 12.99],
+                    ['id' => 'metformin_850mg',  'name' => 'Metformin 850mg',  'dose' => '850mg',  'price' => 14.99],
+                    ['id' => 'metformin_1000mg', 'name' => 'Metformin 1000mg', 'dose' => '1000mg', 'price' => 16.99],
+                ],
+            ],
+
+            // ── Inclusions (shipped in orders, no extra charge to patient) ─────
+            [
+                'id'                   => 'cyclizine',
+                'name'                 => 'Cyclizine',
+                'category'             => 'medication',
+                'requiresPrescription' => false,
+                'availableAsInclusion' => true,
+                'availableAsUpsell'    => false,
+                'variants'             => [
+                    ['id' => 'cyclizine_50mg', 'name' => 'Cyclizine 50mg', 'price' => 0.00],
+                ],
+            ],
+            [
+                'id'                   => 'loperamide',
+                'name'                 => 'Loperamide',
+                'category'             => 'medication',
+                'requiresPrescription' => false,
+                'availableAsInclusion' => true,
+                'availableAsUpsell'    => false,
+                'variants'             => [
+                    ['id' => 'loperamide_2mg', 'name' => 'Loperamide 2mg', 'price' => 0.00],
+                ],
+            ],
+            [
+                'id'                   => 'welcome_booklet',
+                'name'                 => 'Welcome booklet',
+                'category'             => 'supply',
+                'requiresPrescription' => false,
+                'availableAsInclusion' => true,
+                'availableAsUpsell'    => false,
+                'variants'             => [
+                    ['id' => 'welcome_booklet_std', 'name' => 'Welcome booklet (standard)', 'price' => 0.00],
+                ],
+            ],
+            [
+                'id'                   => 'sharps_bin',
+                'name'                 => 'Sharps bin',
+                'category'             => 'supply',
+                'requiresPrescription' => false,
+                'availableAsInclusion' => true,
+                'availableAsUpsell'    => false,
+                'variants'             => [
+                    ['id' => 'sharps_bin_1l', 'name' => 'Sharps bin (1 litre)',  'price' => 0.00],
+                    ['id' => 'sharps_bin_2l', 'name' => 'Sharps bin (2 litres)', 'price' => 0.00],
+                ],
+            ],
+
+            // ── Upsells (add-ons patients can purchase alongside their plan) ───
+            [
+                'id'                   => 'anti_nausea',
+                'name'                 => 'Anti-nausea medication',
+                'category'             => 'medication',
+                'requiresPrescription' => false,
+                'availableAsInclusion' => false,
+                'availableAsUpsell'    => true,
+                'variants'             => [
+                    ['id' => 'anti_nausea_std', 'name' => 'Anti-nausea medication', 'price' => 12.99],
+                ],
+            ],
+            [
+                'id'                   => 'constipation_support',
+                'name'                 => 'Constipation support',
+                'category'             => 'medication',
+                'requiresPrescription' => false,
+                'availableAsInclusion' => false,
+                'availableAsUpsell'    => true,
+                'variants'             => [
+                    ['id' => 'constipation_support_std', 'name' => 'Constipation support', 'price' => 14.99],
+                ],
+            ],
+            [
+                'id'                   => 'alcohol_wipes',
+                'name'                 => 'Alcohol wipes',
+                'category'             => 'supply',
+                'requiresPrescription' => false,
+                'availableAsInclusion' => false,
+                'availableAsUpsell'    => true,
+                'variants'             => [
+                    ['id' => 'alcohol_wipes_50', 'name' => 'Alcohol wipes (50 pack)', 'price' => 3.99],
+                ],
+            ],
+            [
+                'id'                   => 'needles',
+                'name'                 => 'Needles',
+                'category'             => 'supply',
+                'requiresPrescription' => false,
+                'availableAsInclusion' => false,
+                'availableAsUpsell'    => true,
+                'variants'             => [
+                    ['id' => 'needles_4mm', 'name' => 'Pen needles 4mm (100 pack)', 'price' => 5.99],
+                    ['id' => 'needles_5mm', 'name' => 'Pen needles 5mm (100 pack)', 'price' => 6.49],
+                ],
+            ],
+            [
+                'id'                   => 'vitamin_b12',
+                'name'                 => 'Vitamin B12',
+                'category'             => 'vitamin',
+                'requiresPrescription' => false,
+                'availableAsInclusion' => false,
+                'availableAsUpsell'    => true,
+                'variants'             => [
+                    ['id' => 'vitamin_b12_std', 'name' => 'Vitamin B12 (60 tablets)', 'price' => 8.99],
+                ],
+            ],
+            [
+                'id'                   => 'vitamin_d3',
+                'name'                 => 'Vitamin D3',
+                'category'             => 'vitamin',
+                'requiresPrescription' => false,
+                'availableAsInclusion' => false,
+                'availableAsUpsell'    => true,
+                'variants'             => [
+                    ['id' => 'vitamin_d3_std', 'name' => 'Vitamin D3 (60 softgels)', 'price' => 9.99],
+                ],
+            ],
+            [
+                'id'                   => 'multivitamin',
+                'name'                 => 'Multivitamin complex',
+                'category'             => 'vitamin',
+                'requiresPrescription' => false,
+                'availableAsInclusion' => false,
+                'availableAsUpsell'    => true,
+                'variants'             => [
+                    ['id' => 'multivitamin_std', 'name' => 'Multivitamin complex (60 tablets)', 'price' => 15.99],
+                ],
+            ],
+            [
+                'id'                   => 'omega_3',
+                'name'                 => 'Omega-3 fish oil',
+                'category'             => 'supplement',
+                'requiresPrescription' => false,
+                'availableAsInclusion' => false,
+                'availableAsUpsell'    => true,
+                'variants'             => [
+                    ['id' => 'omega_3_std', 'name' => 'Omega-3 fish oil (60 capsules)', 'price' => 11.99],
+                ],
+            ],
+            [
+                'id'                   => 'protein_shake',
+                'name'                 => 'Protein shake',
+                'category'             => 'supplement',
+                'requiresPrescription' => false,
+                'availableAsInclusion' => false,
+                'availableAsUpsell'    => true,
+                'variants'             => [
+                    ['id' => 'protein_shake_30', 'name' => 'Protein shake (30 servings)', 'price' => 24.99],
+                ],
+            ],
+
         ];
     }
 
-    public static function medicationById(string $id): ?array
+    // ── Generic product lookup helpers ─────────────────────────────────────────
+
+    public static function productById(string $id): ?array
     {
-        foreach (self::medications() as $m) {
-            if ($m['id'] === $id) return $m;
+        foreach (self::products() as $p) {
+            if ($p['id'] === $id) return $p;
         }
         return null;
+    }
+
+    public static function variantsByProductId(string $productId): array
+    {
+        return self::productById($productId)['variants'] ?? [];
+    }
+
+    public static function variantById(string $variantId): ?array
+    {
+        foreach (self::products() as $product) {
+            foreach ($product['variants'] as $v) {
+                if ($v['id'] === $variantId) return $v;
+            }
+        }
+        return null;
+    }
+
+    // ── Filtered product views ─────────────────────────────────────────────────
+
+    /** Products that require a prescription — used in the Medications section. */
+    public static function medications(): array
+    {
+        return array_values(array_filter(self::products(), fn($p) => $p['requiresPrescription']));
+    }
+
+    /** Products available as order inclusions. */
+    public static function inclusionProducts(): array
+    {
+        return array_values(array_filter(self::products(), fn($p) => $p['availableAsInclusion']));
+    }
+
+    /** Products available as upsells / add-ons. */
+    public static function addonProducts(): array
+    {
+        return array_values(array_filter(self::products(), fn($p) => $p['availableAsUpsell']));
+    }
+
+    // ── Backward-compat medication helpers ────────────────────────────────────
+
+    public static function medicationById(string $id): ?array
+    {
+        return self::productById($id);
+    }
+
+    public static function variantsByMedicationId(string $medicationId): array
+    {
+        return self::variantsByProductId($medicationId);
     }
 
     // ── Titration paths ───────────────────────────────────────────────────────
@@ -48,60 +296,15 @@ final class Catalogues
         ));
     }
 
-    // ── Add-ons (upsells) ─────────────────────────────────────────────────────
-
-    public static function addons(): array
-    {
-        return [
-            ['id' => 'anti_nausea',          'name' => 'Anti-nausea medication',   'category' => 'medication',  'price' => 12.99],
-            ['id' => 'constipation_support', 'name' => 'Constipation support',     'category' => 'medication',  'price' => 14.99],
-            ['id' => 'alcohol_wipes',        'name' => 'Alcohol wipes',            'category' => 'supply',      'price' => 3.99],
-            ['id' => 'needles',              'name' => 'Needles',                   'category' => 'supply',      'price' => 5.99],
-            ['id' => 'vitamin_b12',          'name' => 'Vitamin B12',              'category' => 'vitamin',     'price' => 8.99],
-            ['id' => 'vitamin_d3',           'name' => 'Vitamin D3',               'category' => 'vitamin',     'price' => 9.99],
-            ['id' => 'multivitamin',         'name' => 'Multivitamin complex',     'category' => 'vitamin',     'price' => 15.99],
-            ['id' => 'omega_3',              'name' => 'Omega-3 fish oil',         'category' => 'vitamin',     'price' => 11.99],
-            ['id' => 'protein_shake',        'name' => 'Protein shake (30 srv.)',  'category' => 'supplement',  'price' => 24.99],
-        ];
-    }
-
-    public static function addonById(string $id): ?array
-    {
-        foreach (self::addons() as $a) {
-            if ($a['id'] === $id) return $a;
-        }
-        return null;
-    }
-
-    // ── Inclusions ────────────────────────────────────────────────────────────
-
-    public static function inclusions(): array
-    {
-        return [
-            ['id' => 'cyclizine',       'name' => 'Cyclizine',        'description' => 'Anti-nausea medication',     'isMedication' => true],
-            ['id' => 'loperamide',      'name' => 'Loperamide',       'description' => 'Anti-diarrhoeal medication',  'isMedication' => true],
-            ['id' => 'welcome_booklet', 'name' => 'Welcome booklet',  'description' => 'Onboarding materials',        'isMedication' => false],
-            ['id' => 'sharps_bin',      'name' => 'Sharps bin',       'description' => 'Safe needle disposal',        'isMedication' => false],
-        ];
-    }
-
-    public static function inclusionById(string $id): ?array
-    {
-        foreach (self::inclusions() as $i) {
-            if ($i['id'] === $id) return $i;
-        }
-        return null;
-    }
-
     // ── Duration options ──────────────────────────────────────────────────────
 
     public static function durationOptions(): array
     {
         return [
-            ['id' => '3m',     'label' => '3 months',   'months' => 3],
-            ['id' => '6m',     'label' => '6 months',   'months' => 6],
-            ['id' => '12m',    'label' => '12 months',  'months' => 12],
-            ['id' => 'custom', 'label' => 'Custom',     'months' => null],
+            ['id' => '3m',     'label' => '3 months',  'months' => 3],
+            ['id' => '6m',     'label' => '6 months',  'months' => 6],
+            ['id' => '12m',    'label' => '12 months', 'months' => 12],
+            ['id' => 'custom', 'label' => 'Custom',    'months' => null],
         ];
     }
 
@@ -110,10 +313,10 @@ final class Catalogues
     public static function cycleOptions(): array
     {
         return [
-            ['id' => '4w',     'label' => 'Every 4 weeks',  'days' => 28],
-            ['id' => '2w',     'label' => 'Every 2 weeks',  'days' => 14],
-            ['id' => 'monthly','label' => 'Monthly',        'days' => 30],
-            ['id' => 'custom', 'label' => 'Custom',         'days' => null],
+            ['id' => '4w',     'label' => 'Every 4 weeks', 'days' => 28],
+            ['id' => '2w',     'label' => 'Every 2 weeks', 'days' => 14],
+            ['id' => 'monthly','label' => 'Monthly',       'days' => 30],
+            ['id' => 'custom', 'label' => 'Custom',        'days' => null],
         ];
     }
 
@@ -130,16 +333,16 @@ final class Catalogues
         ];
     }
 
-    // ── Inclusion cycle options ───────────────────────────────────────────────
+    // ── Inclusion / upsell cycle options ──────────────────────────────────────
 
     public static function inclusionCycleOptions(): array
     {
         return [
-            ['id' => '2w',     'label' => 'Every 2 weeks',   'days' => 14],
-            ['id' => '4w',     'label' => 'Every 4 weeks',   'days' => 28],
-            ['id' => '3m',     'label' => 'Every 3 months',  'days' => 90],
-            ['id' => '6m',     'label' => 'Every 6 months',  'days' => 180],
-            ['id' => 'custom', 'label' => 'Custom',          'days' => null],
+            ['id' => '2w',     'label' => 'Every 2 weeks',  'days' => 14],
+            ['id' => '4w',     'label' => 'Every 4 weeks',  'days' => 28],
+            ['id' => '3m',     'label' => 'Every 3 months', 'days' => 90],
+            ['id' => '6m',     'label' => 'Every 6 months', 'days' => 180],
+            ['id' => 'custom', 'label' => 'Custom',         'days' => null],
         ];
     }
 
@@ -148,11 +351,11 @@ final class Catalogues
     public static function offerBillingCycleOptions(): array
     {
         return [
-            ['id' => 'monthly', 'label' => 'Monthly',          'days' => 30],
-            ['id' => '3m',      'label' => 'Every 3 months',   'days' => 90],
-            ['id' => '6m',      'label' => 'Every 6 months',   'days' => 180],
-            ['id' => '12m',     'label' => 'Every 12 months',  'days' => 365],
-            ['id' => 'custom',  'label' => 'Custom',           'days' => null],
+            ['id' => 'monthly', 'label' => 'Monthly',         'days' => 30],
+            ['id' => '3m',      'label' => 'Every 3 months',  'days' => 90],
+            ['id' => '6m',      'label' => 'Every 6 months',  'days' => 180],
+            ['id' => '12m',     'label' => 'Every 12 months', 'days' => 365],
+            ['id' => 'custom',  'label' => 'Custom',          'days' => null],
         ];
     }
 }
