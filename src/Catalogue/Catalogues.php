@@ -18,7 +18,6 @@ final class Catalogues
     public static function products(): array
     {
         return [
-
             // ── Prescription medications ───────────────────────────────────────
             [
                 'id'                   => 'mounjaro',
@@ -213,7 +212,6 @@ final class Catalogues
                     ['id' => 'protein_shake_30', 'name' => 'Protein shake (30 servings)', 'price' => 24.99],
                 ],
             ],
-
         ];
     }
 
@@ -222,8 +220,11 @@ final class Catalogues
     public static function productById(string $id): ?array
     {
         foreach (self::products() as $p) {
-            if ($p['id'] === $id) return $p;
+            if ($p['id'] === $id) {
+                return $p;
+            }
         }
+
         return null;
     }
 
@@ -236,9 +237,12 @@ final class Catalogues
     {
         foreach (self::products() as $product) {
             foreach ($product['variants'] as $v) {
-                if ($v['id'] === $variantId) return $v;
+                if ($v['id'] === $variantId) {
+                    return $v;
+                }
             }
         }
+
         return null;
     }
 
@@ -247,19 +251,19 @@ final class Catalogues
     /** Products that require a prescription — used in the Medications section. */
     public static function medications(): array
     {
-        return array_values(array_filter(self::products(), fn($p) => $p['requiresPrescription']));
+        return array_values(array_filter(self::products(), fn ($p) => $p['requiresPrescription']));
     }
 
     /** Products available as order inclusions. */
     public static function inclusionProducts(): array
     {
-        return array_values(array_filter(self::products(), fn($p) => $p['availableAsInclusion']));
+        return array_values(array_filter(self::products(), fn ($p) => $p['availableAsInclusion']));
     }
 
     /** Products available as upsells / add-ons. */
     public static function addonProducts(): array
     {
-        return array_values(array_filter(self::products(), fn($p) => $p['availableAsUpsell']));
+        return array_values(array_filter(self::products(), fn ($p) => $p['availableAsUpsell']));
     }
 
     // ── Backward-compat medication helpers ────────────────────────────────────
@@ -292,7 +296,7 @@ final class Catalogues
     {
         return array_values(array_filter(
             self::titrationPaths(),
-            fn($t) => $t['medicationId'] === $medicationId
+            fn ($t) => $t['medicationId'] === $medicationId
         ));
     }
 
@@ -315,7 +319,7 @@ final class Catalogues
         return [
             ['id' => '4w',     'label' => 'Every 4 weeks', 'days' => 28],
             ['id' => '2w',     'label' => 'Every 2 weeks', 'days' => 14],
-            ['id' => 'monthly','label' => 'Monthly',       'days' => 30],
+            ['id' => 'monthly', 'label' => 'Monthly',       'days' => 30],
             ['id' => 'custom', 'label' => 'Custom',        'days' => null],
         ];
     }

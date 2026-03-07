@@ -3,6 +3,7 @@
 namespace App\Twig\Components;
 
 use App\Catalogue\Catalogues;
+use Symfony\Component\Uid\Uuid;
 use Symfony\UX\LiveComponent\Attribute\AsLiveComponent;
 use Symfony\UX\LiveComponent\Attribute\LiveAction;
 use Symfony\UX\LiveComponent\Attribute\LiveArg;
@@ -76,6 +77,11 @@ class TreatmentPlanBuilder
     #[LiveProp(writable: true)]
     public array $upsells = [];
 
+    // ── Plan output modal ─────────────────────────────────────────────────────
+
+    #[LiveProp(writable: true)]
+    public bool $showPlanModal = false;
+
     // ──────────────────────────────────────────────────────────────────────────
 
     public function mount(): void
@@ -100,7 +106,7 @@ class TreatmentPlanBuilder
     public function removeMedication(#[LiveArg] string $key): void
     {
         $this->medications = array_values(
-            array_filter($this->medications, fn($m) => $m['key'] !== $key)
+            array_filter($this->medications, fn ($m) => $m['key'] !== $key)
         );
     }
 
@@ -108,7 +114,7 @@ class TreatmentPlanBuilder
     public function setMedicationVariant(#[LiveArg] string $key, #[LiveArg] string $variantId): void
     {
         $this->medications = array_map(
-            fn($m) => $m['key'] === $key ? array_merge($m, ['variantId' => $variantId]) : $m,
+            fn ($m) => $m['key'] === $key ? array_merge($m, ['variantId' => $variantId]) : $m,
             $this->medications
         );
     }
@@ -117,11 +123,14 @@ class TreatmentPlanBuilder
     public function setMedicationProduct(#[LiveArg] string $key, #[LiveArg] string $medicationId): void
     {
         $this->medications = array_map(function ($m) use ($key, $medicationId) {
-            if ($m['key'] !== $key) return $m;
+            if ($m['key'] !== $key) {
+                return $m;
+            }
+
             return array_merge($m, [
-                'medicationId'    => $medicationId,
-                'variantId'       => '',
-                'titrationPathId' => '',
+                'medicationId'     => $medicationId,
+                'variantId'        => '',
+                'titrationPathId'  => '',
                 'titrationEnabled' => false,
             ]);
         }, $this->medications);
@@ -139,7 +148,7 @@ class TreatmentPlanBuilder
     public function removeInclusion(#[LiveArg] string $key): void
     {
         $this->inclusions = array_values(
-            array_filter($this->inclusions, fn($i) => $i['key'] !== $key)
+            array_filter($this->inclusions, fn ($i) => $i['key'] !== $key)
         );
     }
 
@@ -147,7 +156,10 @@ class TreatmentPlanBuilder
     public function setInclusionProduct(#[LiveArg] string $key, #[LiveArg] string $productId): void
     {
         $this->inclusions = array_map(function ($i) use ($key, $productId) {
-            if ($i['key'] !== $key) return $i;
+            if ($i['key'] !== $key) {
+                return $i;
+            }
+
             return array_merge($i, ['productId' => $productId, 'variantId' => '']);
         }, $this->inclusions);
     }
@@ -156,7 +168,7 @@ class TreatmentPlanBuilder
     public function setInclusionScheduleType(#[LiveArg] string $key, #[LiveArg] string $type): void
     {
         $this->inclusions = array_map(
-            fn($i) => $i['key'] === $key ? array_merge($i, ['scheduleType' => $type]) : $i,
+            fn ($i) => $i['key'] === $key ? array_merge($i, ['scheduleType' => $type]) : $i,
             $this->inclusions
         );
     }
@@ -165,14 +177,17 @@ class TreatmentPlanBuilder
     public function toggleInclusionOrder(#[LiveArg] string $key, #[LiveArg] int $orderNum): void
     {
         $this->inclusions = array_map(function ($i) use ($key, $orderNum) {
-            if ($i['key'] !== $key) return $i;
+            if ($i['key'] !== $key) {
+                return $i;
+            }
             $nums = $i['orderNumbers'];
             if (in_array($orderNum, $nums, true)) {
-                $nums = array_values(array_filter($nums, fn($n) => $n !== $orderNum));
+                $nums = array_values(array_filter($nums, fn ($n) => $n !== $orderNum));
             } else {
                 $nums[] = $orderNum;
                 sort($nums);
             }
+
             return array_merge($i, ['orderNumbers' => $nums]);
         }, $this->inclusions);
     }
@@ -189,7 +204,7 @@ class TreatmentPlanBuilder
     public function removeOffer(#[LiveArg] string $key): void
     {
         $this->offers = array_values(
-            array_filter($this->offers, fn($o) => $o['key'] !== $key)
+            array_filter($this->offers, fn ($o) => $o['key'] !== $key)
         );
     }
 
@@ -197,7 +212,7 @@ class TreatmentPlanBuilder
     public function setOfferType(#[LiveArg] string $key, #[LiveArg] string $type): void
     {
         $this->offers = array_map(
-            fn($o) => $o['key'] === $key ? array_merge($o, ['offerType' => $type]) : $o,
+            fn ($o) => $o['key'] === $key ? array_merge($o, ['offerType' => $type]) : $o,
             $this->offers
         );
     }
@@ -214,7 +229,7 @@ class TreatmentPlanBuilder
     public function removeUpsell(#[LiveArg] string $key): void
     {
         $this->upsells = array_values(
-            array_filter($this->upsells, fn($u) => $u['key'] !== $key)
+            array_filter($this->upsells, fn ($u) => $u['key'] !== $key)
         );
     }
 
@@ -222,7 +237,10 @@ class TreatmentPlanBuilder
     public function setUpsellProduct(#[LiveArg] string $key, #[LiveArg] string $productId): void
     {
         $this->upsells = array_map(function ($u) use ($key, $productId) {
-            if ($u['key'] !== $key) return $u;
+            if ($u['key'] !== $key) {
+                return $u;
+            }
+
             return array_merge($u, ['productId' => $productId, 'variantId' => '']);
         }, $this->upsells);
     }
@@ -231,7 +249,7 @@ class TreatmentPlanBuilder
     public function setUpsellScheduleType(#[LiveArg] string $key, #[LiveArg] string $type): void
     {
         $this->upsells = array_map(
-            fn($u) => $u['key'] === $key ? array_merge($u, ['scheduleType' => $type]) : $u,
+            fn ($u) => $u['key'] === $key ? array_merge($u, ['scheduleType' => $type]) : $u,
             $this->upsells
         );
     }
@@ -240,7 +258,7 @@ class TreatmentPlanBuilder
     public function setUpsellPricingType(#[LiveArg] string $key, #[LiveArg] string $type): void
     {
         $this->upsells = array_map(
-            fn($u) => $u['key'] === $key ? array_merge($u, ['pricingType' => $type]) : $u,
+            fn ($u) => $u['key'] === $key ? array_merge($u, ['pricingType' => $type]) : $u,
             $this->upsells
         );
     }
@@ -249,14 +267,17 @@ class TreatmentPlanBuilder
     public function toggleUpsellOrder(#[LiveArg] string $key, #[LiveArg] int $orderNum): void
     {
         $this->upsells = array_map(function ($u) use ($key, $orderNum) {
-            if ($u['key'] !== $key) return $u;
+            if ($u['key'] !== $key) {
+                return $u;
+            }
             $nums = $u['orderNumbers'];
             if (in_array($orderNum, $nums, true)) {
-                $nums = array_values(array_filter($nums, fn($n) => $n !== $orderNum));
+                $nums = array_values(array_filter($nums, fn ($n) => $n !== $orderNum));
             } else {
                 $nums[] = $orderNum;
                 sort($nums);
             }
+
             return array_merge($u, ['orderNumbers' => $nums]);
         }, $this->upsells);
     }
@@ -270,8 +291,11 @@ class TreatmentPlanBuilder
             return max(1, $this->customDurationMonths);
         }
         foreach (Catalogues::durationOptions() as $opt) {
-            if ($opt['id'] === $this->durationId) return $opt['months'];
+            if ($opt['id'] === $this->durationId) {
+                return $opt['months'];
+            }
         }
+
         return 6;
     }
 
@@ -282,8 +306,11 @@ class TreatmentPlanBuilder
             return max(1, $this->customCycleDays);
         }
         foreach (Catalogues::cycleOptions() as $opt) {
-            if ($opt['id'] === $this->cycleId) return $opt['days'];
+            if ($opt['id'] === $this->cycleId) {
+                return $opt['days'];
+            }
         }
+
         return 28;
     }
 
@@ -296,31 +323,58 @@ class TreatmentPlanBuilder
     // ── Catalogue helpers ─────────────────────────────────────────────────────
 
     #[ExposeInTemplate]
-    public function getDurationOptions(): array { return Catalogues::durationOptions(); }
+    public function getDurationOptions(): array
+    {
+        return Catalogues::durationOptions();
+    }
 
     #[ExposeInTemplate]
-    public function getCycleOptions(): array { return Catalogues::cycleOptions(); }
+    public function getCycleOptions(): array
+    {
+        return Catalogues::cycleOptions();
+    }
 
     #[ExposeInTemplate]
-    public function getMedicationCatalogue(): array { return Catalogues::medications(); }
+    public function getMedicationCatalogue(): array
+    {
+        return Catalogues::medications();
+    }
 
     #[ExposeInTemplate]
-    public function getTitrationCatalogue(): array { return Catalogues::titrationPaths(); }
+    public function getTitrationCatalogue(): array
+    {
+        return Catalogues::titrationPaths();
+    }
 
     #[ExposeInTemplate]
-    public function getPrescriptionRenewalOptions(): array { return Catalogues::prescriptionRenewalOptions(); }
+    public function getPrescriptionRenewalOptions(): array
+    {
+        return Catalogues::prescriptionRenewalOptions();
+    }
 
     #[ExposeInTemplate]
-    public function getInclusionProducts(): array { return Catalogues::inclusionProducts(); }
+    public function getInclusionProducts(): array
+    {
+        return Catalogues::inclusionProducts();
+    }
 
     #[ExposeInTemplate]
-    public function getInclusionCycleOptions(): array { return Catalogues::inclusionCycleOptions(); }
+    public function getInclusionCycleOptions(): array
+    {
+        return Catalogues::inclusionCycleOptions();
+    }
 
     #[ExposeInTemplate]
-    public function getAddonProducts(): array { return Catalogues::addonProducts(); }
+    public function getAddonProducts(): array
+    {
+        return Catalogues::addonProducts();
+    }
 
     #[ExposeInTemplate]
-    public function getOfferBillingCycleOptions(): array { return Catalogues::offerBillingCycleOptions(); }
+    public function getOfferBillingCycleOptions(): array
+    {
+        return Catalogues::offerBillingCycleOptions();
+    }
 
     // ── Validation ────────────────────────────────────────────────────────────
 
@@ -335,21 +389,24 @@ class TreatmentPlanBuilder
 
         $anyMedicationSelected = array_any(
             $this->medications,
-            fn($m) => !empty($m['medicationId'])
+            fn ($m) => !empty($m['medicationId'])
         );
         if (!$anyMedicationSelected) {
             $errors['medications'] = 'Add at least one medication.';
         }
 
         $titrationErrors = array_map(function ($m) {
-            if (empty($m['medicationId'])) return null;
+            if (empty($m['medicationId'])) {
+                return null;
+            }
             if (!empty($m['titrationEnabled']) && empty($m['titrationPathId'])) {
                 return 'Select a titration path for this medication.';
             }
+
             return null;
         }, $this->medications);
 
-        $hasTitrationError = in_array(true, array_map(fn($e) => $e !== null, $titrationErrors), true);
+        $hasTitrationError = in_array(true, array_map(fn ($e) => $e !== null, $titrationErrors), true);
 
         return [
             'errors'          => $errors,
@@ -358,19 +415,102 @@ class TreatmentPlanBuilder
         ];
     }
 
+    // ── Plan output ───────────────────────────────────────────────────────────
+
+    #[LiveAction]
+    public function createPlan(): void
+    {
+        $this->validate();
+        $this->showPlanModal = true;
+    }
+
+    #[LiveAction]
+    public function closePlanModal(): void
+    {
+        $this->showPlanModal = false;
+    }
+
+    #[ExposeInTemplate]
+    public function getPlanJson(): string
+    {
+        $plan = [
+            'id'        => Uuid::v4()->toRfc4122(),
+            'createdAt' => (new \DateTimeImmutable())->format(\DateTimeInterface::ATOM),
+            'plan'      => [
+                'name'     => $this->planName,
+                'duration' => [
+                    'months'    => $this->getDuration(),
+                    'autoRenew' => $this->autoRenew,
+                ],
+            ],
+            'dispatch' => [
+                'cycleDays'                => $this->getCycleDays(),
+                'ordersCount'              => $this->getOrdersCount(),
+                'allowPatientRescheduling' => $this->allowPatientRescheduling,
+                'rescheduleDaysEarlier'    => $this->allowPatientRescheduling ? $this->rescheduleDaysEarlier : null,
+                'rescheduleDaysLater'      => $this->allowPatientRescheduling ? $this->rescheduleDaysLater : null,
+            ],
+            'medications' => array_values(array_map(fn ($m) => [
+                'productId' => $m['medicationId'],
+                'variantId' => $m['variantId'],
+                'qty'       => $m['quantityPerOrder'],
+                'titration' => $m['titrationEnabled'] ? [
+                    'pathId' => $m['titrationPathId'],
+                ] : null,
+                'prescription' => $m['prescription'],
+            ], array_filter($this->medications, fn ($m) => $m['medicationId'] !== ''))),
+            'inclusions' => array_values(array_map(fn ($i) => [
+                'productId' => $i['productId'],
+                'variantId' => $i['variantId'],
+                'schedule'  => [
+                    'type'            => $i['scheduleType'],
+                    'orderNumbers'    => $i['scheduleType'] === 'specific_orders' ? $i['orderNumbers'] : null,
+                    'repeatOnRenewal' => $i['scheduleType'] === 'specific_orders' ? $i['repeatOnRenewal'] : null,
+                    'cycleId'         => $i['scheduleType'] === 'recurring_cycle' ? $i['cycleId'] : null,
+                    'cycleDays'       => $i['scheduleType'] === 'recurring_cycle' ? $i['customCycleDays'] : null,
+                ],
+            ], array_filter($this->inclusions, fn ($i) => $i['productId'] !== ''))),
+            'upsells' => array_values(array_map(fn ($u) => [
+                'productId' => $u['productId'],
+                'variantId' => $u['variantId'],
+                'pricing'   => [
+                    'type'        => $u['pricingType'],
+                    'customPrice' => $u['pricingType'] === 'custom' ? $u['customPrice'] : null,
+                ],
+                'schedule' => [
+                    'type'         => $u['scheduleType'],
+                    'orderNumbers' => $u['scheduleType'] === 'specific_orders' ? $u['orderNumbers'] : null,
+                    'cycleId'      => $u['scheduleType'] === 'recurring_cycle' ? $u['cycleId'] : null,
+                    'cycleDays'    => $u['scheduleType'] === 'recurring_cycle' ? $u['customCycleDays'] : null,
+                ],
+            ], array_filter($this->upsells, fn ($u) => $u['productId'] !== ''))),
+            'offers' => array_values(array_map(fn ($o) => [
+                'type'                => $o['offerType'],
+                'price'               => $o['offerType'] === 'fixed_price' ? $o['price'] : null,
+                'billingCycleId'      => $o['offerType'] === 'fixed_price' ? $o['billingCycleId'] : null,
+                'billingRescheduling' => ($o['offerType'] === 'fixed_price' && $o['allowBillingRescheduling']) ? [
+                    'daysEarlier' => $o['billingRescheduleDaysEarlier'],
+                    'daysLater'   => $o['billingRescheduleDaysLater'],
+                ] : null,
+            ], $this->offers)),
+        ];
+
+        return json_encode($plan, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+    }
+
     // ── Private helpers ───────────────────────────────────────────────────────
 
     private function newMedicationItem(): array
     {
         return [
-            'key'              => bin2hex(random_bytes(8)),
+            'key'              => Uuid::v4()->toRfc4122(),
             'medicationId'     => '',
             'variantId'        => '',
             'titrationEnabled' => false,
             'titrationPathId'  => '',
             'quantityPerOrder' => 1,
             'prescription'     => [
-                'renewalMonths'               => '3',
+                'renewalMonths'                => '3',
                 'approvalRequiredOnDoseChange' => true,
             ],
         ];
@@ -379,7 +519,7 @@ class TreatmentPlanBuilder
     private function newInclusionItem(): array
     {
         return [
-            'key'             => bin2hex(random_bytes(8)),
+            'key'             => Uuid::v4()->toRfc4122(),
             'productId'       => '',
             'variantId'       => '',
             'scheduleType'    => 'specific_orders',
@@ -388,7 +528,7 @@ class TreatmentPlanBuilder
             'cycleId'         => '3m',
             'customCycleDays' => 90,
             'prescription'    => [
-                'renewalMonths'               => '3',
+                'renewalMonths'                => '3',
                 'approvalRequiredOnDoseChange' => false,
             ],
         ];
@@ -397,12 +537,12 @@ class TreatmentPlanBuilder
     private function newOfferItem(): array
     {
         return [
-            'key'                        => bin2hex(random_bytes(8)),
-            'offerType'                  => 'basket_value',
-            'price'                      => 0.0,
-            'billingCycleId'             => 'monthly',
-            'customBillingDays'          => 30,
-            'allowBillingRescheduling'   => false,
+            'key'                          => Uuid::v4()->toRfc4122(),
+            'offerType'                    => 'basket_value',
+            'price'                        => 0.0,
+            'billingCycleId'               => 'monthly',
+            'customBillingDays'            => 30,
+            'allowBillingRescheduling'     => false,
             'billingRescheduleDaysEarlier' => 5,
             'billingRescheduleDaysLater'   => 10,
         ];
@@ -411,7 +551,7 @@ class TreatmentPlanBuilder
     private function newUpsellItem(): array
     {
         return [
-            'key'             => bin2hex(random_bytes(8)),
+            'key'             => Uuid::v4()->toRfc4122(),
             'productId'       => '',
             'variantId'       => '',
             'scheduleType'    => 'specific_orders',
