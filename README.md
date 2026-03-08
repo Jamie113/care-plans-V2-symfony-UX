@@ -1,19 +1,18 @@
 # Treatment Plan Builder — Prototype
 
-A Symfony UX Live Component prototype for configuring treatment plans. Built to give the engineering team a concrete, interactive reference for defining scope of work.
+A Symfony UX Live Component prototype for configuring treatment plans. Built to give the team a interactive reference for defining scope of work.
 
 ---
 
 ## Purpose
 
-This is a **non-production prototype**. Its job is to:
+This is a **prototype**. Its job is to:
 
 - Show how a treatment plan is structured (medications, dispatch, inclusions, upsells, offers)
-- Define the JSON API contract the real system will need to accept
-- Surface engineering scope via code comments on every card section
+- Define example JSON API contract
 - Let stakeholders interact with the UI rather than read a static spec
 
-The "Create Plan" button produces a JSON payload (visible in the modal and in the dev data schema panel at the bottom of the page) — this is the proposed API contract, not a real API call.
+The "Create Plan" button produces a JSON payload (visible in the modal and in the dev data schema panel at the bottom of the page) — this is a proposed API contract, not a real API call.
 
 ---
 
@@ -45,8 +44,6 @@ npm run dev          # or npm run watch for hot-reload
 # 4. Start the dev server
 symfony serve        # or php -S localhost:8000 -t public/
 ```
-
-The app has no database requirement — all state is in-memory (LiveProps). No `.env` changes needed.
 
 ---
 
@@ -144,7 +141,7 @@ Catalogues::variantById($variantId)
 
 ## API Contract
 
-Clicking **Create Plan** produces a JSON payload. This is the proposed shape for the real API endpoint that creates a plan. Example:
+Clicking **Create Plan** produces a JSON payload. Example:
 
 ```json
 {
@@ -176,7 +173,7 @@ Clicking **Create Plan** produces a JSON payload. This is the proposed shape for
 }
 ```
 
-The full schema is visible in the **Data schema** dev panel at the bottom of the page.
+The full schema is visible in the dev panel at the bottom of the page.
 
 ---
 
@@ -203,16 +200,15 @@ Open the template and search for `SCOPE —` to jump to any section's notes.
 | Inclusions (product/variant/schedule/repeat-on-renewal) | ✓ Complete (stub catalogue) |
 | Offers (basket value / fixed-price subscription) | ✓ Complete |
 | Upsells (product/variant/schedule/pricing) | ✓ Complete (stub catalogue) |
-| Real product catalogue integration | ○ Not built — replace `Catalogues.php` |
+| Product catalogue integration | ○ Not built — replace `Catalogues.php` |
 | Database persistence / Draft saving | ○ Not built — no Doctrine entities yet |
 | Plan versioning / audit trail | ○ Not built |
-| Clinical workflows (approval, sign-off, lab triggers) | ○ Not built |
-| Payment / billing provider integration | ○ Not built |
-| Patient app presentation (upsell display, rescheduling UI) | ○ Not built |
+| Clinical workflows (approvals) | ○ Not built |
+| Payment / billing | ○ Not built |
 
 ---
 
-## Code Quality
+## Code
 
 ```bash
 # Run PHP CS Fixer (dry-run)
@@ -228,9 +224,8 @@ Config: `.php-cs-fixer.php` — Symfony ruleset + short array syntax + alpha imp
 
 ## Dev Panels
 
-Two collapsible panels at the bottom of the page (visible in the browser, not in production):
+Two collapsible panels at the bottom of the page (visible in the browser):
 
 | Panel | What it shows |
 |---|---|
 | **Data schema** | Live JSON dump of all current LiveProp state (raw component data) |
-| *(proposed)* | The Create Plan modal shows the cleaned API contract JSON with a Copy button |

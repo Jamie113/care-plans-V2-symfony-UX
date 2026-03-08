@@ -420,7 +420,10 @@ class TreatmentPlanBuilder
     #[LiveAction]
     public function createPlan(): void
     {
-        $this->validate();
+        if (!$this->getValidation()['canCreate']) {
+            return;
+        }
+
         $this->showPlanModal = true;
     }
 
