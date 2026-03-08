@@ -1,0 +1,30 @@
+{# ── Dev: live data schema ─────────────────────────────────────────────── #}
+<div class="mx-auto max-w-7xl px-4 sm:px-6 pb-12">
+    <details class="rounded-2xl border border-gray-200 bg-gray-950 overflow-hidden">
+        <summary class="flex items-center gap-2 px-5 py-3.5 cursor-pointer text-xs font-semibold text-gray-400 hover:text-gray-200 transition-colors select-none list-none">
+            <svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/>
+            </svg>
+            Data schema
+            <span class="ml-auto text-gray-600 font-normal">dev only</span>
+        </summary>
+        <div class="border-t border-gray-800 px-5 py-4 overflow-x-auto">
+            <pre class="text-xs text-emerald-400 leading-relaxed whitespace-pre-wrap break-words font-mono">{{ {
+                planName:             planName,
+                durationId:           durationId,
+                customDurationMonths: customDurationMonths,
+                autoRenew:            autoRenew,
+                cycleId:              cycleId,
+                customCycleDays:      customCycleDays,
+                ordersCount:          ordersCount,
+                allowPatientRescheduling: allowPatientRescheduling,
+                rescheduleDaysEarlier: rescheduleDaysEarlier,
+                rescheduleDaysLater:   rescheduleDaysLater,
+                medications:  medications,
+                inclusions:   inclusions,
+                upsells:      upsells,
+                offers:       offers
+            }|json_encode(constant('JSON_PRETTY_PRINT')|default(128)) }}</pre>
+        </div>
+    </details>
+</div>

@@ -1,0 +1,71 @@
+{# ════════════════════════════════════════════════════════════ #}
+{# Clinical Protocols card                                      #}
+{# ════════════════════════════════════════════════════════════ #}
+{#
+    SCOPE — Clinical Protocols
+    ✓  Prescription renewal period per medication (3m/6m/12m)
+    ✓  Approval required on dose change — boolean flag per medication in API contract
+    ✓  Card only renders when at least one medication is selected (protocolMeds filter)
+    ~  Titration path ID is stored but path detail (dose steps/schedule) is not modelled
+    ○  Prescriber assignment and rotation rules
+    ○  Consultation / check-in cadence
+    ○  Lab test triggers (e.g. HbA1c every 3 months, thyroid panel)
+    ○  Side-effect monitoring questionnaire schedule
+    ○  Clinical sign-off workflow before plan goes live
+#}
+{% set protocolMeds = medications|filter(m => m.medicationId != '') %}
+{% if protocolMeds|length > 0 %}
+    <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+        <div class="flex items-center gap-3 px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-100">
+            <div class="flex items-center justify-center w-8 h-8 bg-gray-100 rounded-xl text-gray-500">
+                <svg class="w-[18px] h-[18px]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                </svg>
+            </div>
+            <div>
+                <h2 class="text-sm font-semibold text-gray-900">Clinical protocols</h2>
+                <p class="text-xs text-gray-500">Set prescription renewal frequency and dose-change approval rules per medication.</p>
+            </div>
+        </div>
+
+        <div class="p-4 sm:p-6 space-y-4">
+            {% for i, med in medications %}
+                {% if med.medicationId %}
+                    {% set medData = medicationCatalogue|filter(m => m.id == med.medicationId)|first %}
+                    {% set variantData = med.variantId ? ((medData.variants ?? [])|filter(v => v.id == med.variantId)|first|default(null)) : null %}
+                    <div class="rounded-xl border border-gray-200 bg-gray-50/50 p-4">
+                        <div class="flex items-center gap-2 text-sm font-semibold text-gray-900 mb-4 pb-3 border-b border-gray-200">
+                            <svg class="w-[15px] h-[15px] text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/>
+                            </svg>
+                            {{ variantData ? variantData.name : (medData.name ?? med.medicationId) }}
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
+                            <div>
+                                <label class="block text-xs font-medium text-gray-500 mb-1.5">New prescription required every</label>
+                                <select
+                                    data-model="medications.{{ i }}.prescription.renewalMonths"
+                                    class="w-full px-3 py-2 text-sm text-gray-900 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-gray-900/10 focus:border-gray-500 transition-colors cursor-pointer"
+                                >
+                                    {% for opt in prescriptionRenewalOptions %}
+                                        <option value="{{ opt.id }}" {% if opt.id == med.prescription.renewalMonths %}selected{% endif %}>{{ opt.label }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <label class="flex items-center gap-2.5 cursor-pointer select-none pb-1">
+                                <input
+                                    type="checkbox"
+                                    data-model="medications.{{ i }}.prescription.approvalRequiredOnDoseChange"
+                                    {% if med.prescription.approvalRequiredOnDoseChange %}checked{% endif %}
+                                    class="sr-only peer"
+                                >
+                                <div class="relative w-10 h-5 bg-gray-200 rounded-full peer peer-checked:bg-blue-600 transition-colors after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-5"></div>
+                                <span class="text-sm font-medium text-gray-700">Approval required on dose change</span>
+                            </label>
+                        </div>
+                    </div>
+                {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+{% endif %}

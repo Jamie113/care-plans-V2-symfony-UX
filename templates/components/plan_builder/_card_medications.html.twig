@@ -1,0 +1,179 @@
+{# ════════════════════════════════════════════════════════════ #}
+{# Medications card                                             #}
+{# ════════════════════════════════════════════════════════════ #}
+{#
+    SCOPE — Medications
+    ✓  Product → variant two-step selection (product clears variant on change)
+    ✓  Multiple medications per plan (add / remove with UUID keys)
+    ✓  Quantity per order (integer, min 1)
+    ✓  Titration enabled toggle + titration path select (validated if enabled)
+    ✓  Prescription renewal period select per medication
+    ~  Catalogue is a static PHP stub — real system must fetch from product/formulary service
+    ~  Quantity validated as int only; real system needs max-qty-per-order business rules
+    ○  Dose-change clinical approval workflow
+    ○  Titration schedule detail (dose steps, timing, thresholds)
+    ○  Stock / formulary availability check at plan creation
+    ○  Medication interaction warnings
+#}
+<div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+    <div class="flex items-center gap-3 px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-100">
+        <div class="flex items-center justify-center w-8 h-8 bg-gray-100 rounded-xl text-gray-500">
+            <svg class="w-[18px] h-[18px]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/>
+            </svg>
+        </div>
+        <div>
+            <h2 class="text-sm font-semibold text-gray-900">Medications</h2>
+            <p class="text-xs text-gray-500">Add the medications included in this plan</p>
+        </div>
+    </div>
+
+    <div class="p-6 space-y-3">
+
+        {# Medication rows #}
+        {% for i, med in medications %}
+            {% set titrationError = validation.titrationErrors[i] ?? null %}
+            {% set productData = med.medicationId ? (medicationCatalogue|filter(m => m.id == med.medicationId)|first|default(null)) : null %}
+            {% set productVariants = productData ? (productData.variants ?? []) : [] %}
+            {% set selectedVariant = med.variantId ? (productVariants|filter(v => v.id == med.variantId)|first|default(null)) : null %}
+
+            <div class="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+
+                {# Header: medication count + remove #}
+                <div class="flex items-center justify-between px-4 py-3 bg-gray-50/60 border-b border-gray-100">
+                    <span class="text-xs font-semibold text-gray-400 uppercase tracking-wide">Medication {{ i + 1 }}</span>
+                    {% if medications|length > 1 %}
+                        <button
+                            type="button"
+                            data-action="live#action"
+                            data-live-action-param="removeMedication"
+                            data-live-key-param="{{ med.key }}"
+                            class="p-1.5 rounded-lg text-gray-300 hover:text-red-400 hover:bg-red-50 transition-colors"
+                        >
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                            </svg>
+                        </button>
+                    {% endif %}
+                </div>
+
+                <div class="px-4 py-4 space-y-4">
+
+                    {# Product select #}
+                    <div class="pb-4 border-b border-gray-100">
+                        <label class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 block">Medication</label>
+                        <select
+                            data-action="change->live#action"
+                            data-live-action-param="setMedicationProduct"
+                            data-live-key-param="{{ med.key }}"
+                            data-live-medication-id-param="{{ med.medicationId }}"
+                            onchange="this.dataset.liveMedicationIdParam = this.value"
+                            class="w-full px-3 py-2 text-sm text-gray-900 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-gray-900/10 focus:border-gray-500 transition-colors cursor-pointer"
+                        >
+                            <option value="">Select medication…</option>
+                            {% for m in medicationCatalogue %}
+                                <option value="{{ m.id }}" {% if m.id == med.medicationId %}selected{% endif %}>{{ m.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    {% if med.medicationId %}
+
+                        {# Variant select #}
+                        <div class="pb-4 border-b border-gray-100">
+                            <label class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 block">Variant</label>
+                            <select
+                                data-model="medications.{{ i }}.variantId"
+                                class="w-full px-3 py-2 text-sm text-gray-900 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-gray-900/10 focus:border-gray-500 transition-colors cursor-pointer"
+                            >
+                                <option value="">Select variant…</option>
+                                {% for v in productVariants %}
+                                    <option value="{{ v.id }}" {% if v.id == med.variantId %}selected{% endif %}>{{ v.name }} — £{{ v.price|number_format(2) }}</option>
+                                {% endfor %}
+                            </select>
+                            {% if selectedVariant %}
+                                <p class="text-xs text-gray-400 mt-2">Catalogue price <span class="font-semibold text-emerald-600">£{{ selectedVariant.price|number_format(2) }}</span> per order</p>
+                            {% endif %}
+                        </div>
+
+                        {# Quantity + Titration #}
+                        <div class="flex items-start justify-between gap-6">
+                            <div>
+                                <label class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 block">Qty per order</label>
+                                <input
+                                    type="number"
+                                    min="1"
+                                    data-model="on(input)|medications.{{ i }}.quantityPerOrder"
+                                    value="{{ med.quantityPerOrder }}"
+                                    class="w-24 px-3 py-2 text-sm text-gray-900 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-gray-900/10 transition-colors"
+                                >
+                            </div>
+                            <div>
+                                <label class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 block">Titration</label>
+                                <label class="flex items-center gap-2.5 cursor-pointer select-none">
+                                    <span class="text-sm text-gray-600">Titrate dose over time</span>
+                                    <input
+                                        type="checkbox"
+                                        data-model="medications.{{ i }}.titrationEnabled"
+                                        {% if med.titrationEnabled %}checked{% endif %}
+                                        class="sr-only peer"
+                                    >
+                                    <div class="relative w-10 h-5 flex-shrink-0 bg-gray-200 rounded-full peer peer-checked:bg-blue-600 transition-colors after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-5"></div>
+                                </label>
+                            </div>
+                        </div>
+
+                        {# Titration path (shown when toggle on) #}
+                        {% if med.titrationEnabled %}
+                            {% set availableTitrations = titrationCatalogue|filter(t => t.medicationId == med.medicationId) %}
+                            <div class="space-y-2 pt-1">
+                                <select
+                                    data-model="medications.{{ i }}.titrationPathId"
+                                    class="w-full px-3 py-2 text-sm text-gray-900 bg-white border {{ titrationError ? 'border-red-400 bg-red-50' : 'border-gray-200' }} rounded-xl focus:outline-none focus:ring-2 focus:ring-gray-900/10 transition-colors cursor-pointer"
+                                >
+                                    <option value="">Select titration path…</option>
+                                    {% for t in availableTitrations %}
+                                        <option value="{{ t.id }}" {% if t.id == med.titrationPathId %}selected{% endif %}>{{ t.name }}</option>
+                                    {% endfor %}
+                                </select>
+                                {% if titrationError %}
+                                    <p class="text-xs text-red-500 flex items-center gap-1.5">
+                                        <svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                        {{ titrationError }}
+                                    </p>
+                                {% endif %}
+                            </div>
+                        {% endif %}
+
+                    {% endif %}{# end if medicationId #}
+
+                </div>{# end px-4 py-4 #}
+
+            </div>
+        {% endfor %}
+
+        {# Validation banner #}
+        {% if validation.errors.medications is defined %}
+            <div class="flex items-start gap-3 rounded-xl bg-amber-50 border border-amber-200 p-4">
+                <svg class="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                <p class="text-sm text-amber-800 font-medium">{{ validation.errors.medications }}</p>
+            </div>
+        {% endif %}
+
+        {# Add medication button #}
+        <button
+            type="button"
+            data-action="live#action"
+            data-live-action-param="addMedication"
+            class="flex items-center gap-2 w-full px-4 py-2.5 text-sm font-medium text-blue-700 border border-dashed border-blue-300 rounded-xl hover:bg-blue-50 hover:border-blue-400 transition-colors"
+        >
+            <svg class="w-[15px] h-[15px]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
+            </svg>
+            Add medication
+        </button>
+
+    </div>
+</div>
