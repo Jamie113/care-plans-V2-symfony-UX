@@ -1,137 +1,149 @@
 # Treatment Plan Builder — Prototype
 
-A Symfony UX Live Component prototype for configuring treatment plans. Built to give the team a interactive reference for defining scope of work.
+A Symfony UX Live Component prototype built so the team can interact with a treatment plan rather than read a static spec. Click through it, build a plan, hit Create Plan — the JSON output at the bottom is example API contract.
 
 ---
 
-## Purpose
+## What this is
 
-This is a **prototype**. Its job is to:
+It's a **prototype**, not production code. The goal was to:
 
-- Show how a treatment plan is structured (medications, dispatch, inclusions, upsells, offers)
-- Define example JSON API contract
-- Let stakeholders interact with the UI rather than read a static spec
+- Make the treatment plan data model tangible — medications, dispatch, inclusions, upsells, offers
+- Give engineers and stakeholders something to click through and give feedback on
+- Produce a example JSON payload we can use as a starting point for the real API contract
 
-The "Create Plan" button produces a JSON payload (visible in the modal and in the dev data schema panel at the bottom of the page) — this is a proposed API contract, not a real API call.
+Nothing persists. There's no database. The "Create Plan" button just shows you what the API call would look like.
 
 ---
 
 ## Stack
 
-| Layer | Technology |
+| | |
 |---|---|
 | Framework | Symfony 8.0 (PHP ≥ 8.4) |
 | Reactivity | [Symfony UX Live Components](https://symfony.com/bundles/ux-live-component/current/index.html) |
-| Templates | Twig + Tailwind CSS (via CDN) |
-| State | Single `TreatmentPlanBuilder` Live Component — all state in LiveProps |
-| UIDs | `symfony/uid` — `Uuid::v4()->toRfc4122()` for all item keys |
-| Code style | PHP CS Fixer (`friendsofphp/php-cs-fixer`) — config in `.php-cs-fixer.php` |
+| Templates | Twig + Tailwind CSS (CDN — no build step for CSS) |
+| State | Single `TreatmentPlanBuilder` Live Component, all state in LiveProps |
+| UIDs | `symfony/uid` — `Uuid::v4()->toRfc4122()` |
+| Code style | PHP CS Fixer — config in `.php-cs-fixer.php` |
 
 ---
 
-## Setup
+## Getting started
 
 ```bash
-# 1. Install PHP dependencies
 composer install
-
-# 2. Install JS dependencies
-npm install          # or yarn
-
-# 3. Build assets
-npm run dev          # or npm run watch for hot-reload
-
-# 4. Start the dev server
-symfony serve        # or php -S localhost:8000 -t public/
+npm install
+npm run dev
+symfony serve
 ```
 
+**.env.dev and .env.test are gitignored — don't commit them.** Copy `.env`, adjust locally
+
 ---
 
-## Architecture
+## How it works
 
-### Component: `TreatmentPlanBuilder`
+Everything runs through a single Symfony UX Live Component (`TreatmentPlanBuilder`). Each form interaction fires an AJAX re-render back to the server — no custom JS. State lives entirely in LiveProps on the PHP class.
 
-**File:** `src/Twig/Components/TreatmentPlanBuilder.php`
-**Template:** `templates/components/TreatmentPlanBuilder.html.twig`
+**Why one big component instead of smaller nested ones?**
+It's a simplification that makes sense for a prototype. One component means one place to look at the data model. In production we would want to break this into sub-components per card section, communicating up via `ComponentEvent` but that's overkill for PoC.
 
-The entire builder is a single Symfony UX Live Component. Every user interaction triggers an AJAX re-render — no custom JavaScript needed.
+### Files
 
-#### State (LiveProps)
+**PHP:** `src/Twig/Components/TreatmentPlanBuilder.php`
+**Root template:** `templates/components/TreatmentPlanBuilder.html.twig` (thin shell — just includes)
 
-| Prop | Type | Description |
+Each card section is its own partial in `templates/components/plan_builder/`:
+
+| File | What's in it |
+|---|---|
+| `_header.html.twig` | Sticky header with Save Draft / Create Plan |
+| `_card_plan_details.html.twig` | Plan name, duration, auto-renew, start date |
+| `_card_medications.html.twig` | Medication rows — product, variant, titration, qty |
+| `_card_dispatch.html.twig` | Dispatch cycle, order count, patient rescheduling |
+| `_card_clinical.html.twig` | Prescription renewal and dose-change approval per med |
+| `_card_inclusions.html.twig` | Inclusions — product, variant, schedule, repeat-on-renewal |
+| `_card_offers.html.twig` | Offers — basket value / fixed-price subscription |
+| `_card_upsells.html.twig` | Upsells — product, variant, schedule, pricing |
+| `_summary_panel.html.twig` | Right-hand summary column |
+| `_modal_create_plan.html.twig` | The Create Plan JSON modal |
+| `_dev_panels.html.twig` | Data schema panel at the bottom |
+
+Twig includes inherit the parent scope automatically so no need for `with`.
+
+### State (LiveProps)
+
+| Prop | Type | Notes |
 |---|---|---|
-| `$planName` | `string` | Plan display name |
-| `$durationId` | `string` | Selected preset (`3m`, `6m`, `12m`, `custom`) |
-| `$customDurationMonths` | `int` | Used when `durationId === 'custom'` |
-| `$autoRenew` | `bool` | Restart plan at end of duration |
+| `$planName` | `string` | |
+| `$durationId` | `string` | `3m`, `6m`, `12m`, or `custom` |
+| `$customDurationMonths` | `int` | Only used when durationId is `custom` |
+| `$autoRenew` | `bool` | |
 | `$startBehaviour` | `string` | `immediately` or `future_date` |
-| `$startDate` | `string` | ISO date string |
+| `$startDate` | `string` | ISO date |
 | `$cycleId` | `string` | Dispatch cycle preset |
-| `$customCycleDays` | `int` | Used when `cycleId === 'custom'` |
-| `$allowPatientRescheduling` | `bool` | Allow patient to shift dispatch date |
-| `$rescheduleDaysEarlier` | `int` | Max days patient can move order earlier |
-| `$rescheduleDaysLater` | `int` | Max days patient can move order later |
-| `$medications` | `array` | Array of medication item arrays |
-| `$inclusions` | `array` | Array of inclusion item arrays |
-| `$offers` | `array` | Array of offer item arrays |
-| `$upsells` | `array` | Array of upsell item arrays |
-| `$showPlanModal` | `bool` | Controls the Create Plan JSON modal |
+| `$customCycleDays` | `int` | Only used when cycleId is `custom` |
+| `$allowPatientRescheduling` | `bool` | |
+| `$rescheduleDaysEarlier` | `int` | |
+| `$rescheduleDaysLater` | `int` | |
+| `$medications` | `array` | |
+| `$inclusions` | `array` | |
+| `$offers` | `array` | |
+| `$upsells` | `array` | |
+| `$showPlanModal` | `bool` | Drives the Create Plan modal |
 
-#### Computed values (`#[ExposeInTemplate]`)
+### Computed values
 
-| Method | Returns | Notes |
-|---|---|---|
-| `getDuration()` | `int` (months) | Resolves preset or custom value |
-| `getCycleDays()` | `int` (days) | Resolves preset or custom value |
-| `getOrdersCount()` | `int` | `round((months × 30) ÷ cycleDays)` |
-| `getValidation()` | `array` | `errors`, `titrationErrors`, `canCreate` |
-| `getPlanJson()` | `string` | Full JSON API contract payload |
+These are `#[ExposeInTemplate]` methods — available as variables in Twig, called as methods in PHP (not properties):
 
-#### Key LiveActions
-
-| Action | Purpose |
+| Method | Returns |
 |---|---|
-| `addMedication / removeMedication` | Add/remove medication row |
-| `setMedicationProduct` | Select medication; clears variant |
-| `setMedicationVariant` | Select variant for a medication |
-| `addInclusion / removeInclusion` | Add/remove inclusion row |
-| `setInclusionProduct` | Select inclusion product; clears variant |
-| `setInclusionScheduleType` | Toggle specific_orders / recurring_cycle |
-| `toggleInclusionOrder` | Toggle an order number pill on/off |
-| `addUpsell / removeUpsell` | Add/remove upsell row |
-| `setUpsellProduct` | Select upsell product; clears variant |
-| `setUpsellScheduleType` | Toggle add-to-plan-orders / unique-recurring-cycle |
-| `setUpsellPricingType` | Toggle catalogue / custom price |
-| `addOffer / removeOffer` | Add/remove offer row |
-| `createPlan` | Validate + set `showPlanModal = true` |
-| `closePlanModal` | Set `showPlanModal = false` |
+| `getDuration()` | `int` months — resolves preset or custom |
+| `getCycleDays()` | `int` days — resolves preset or custom |
+| `getOrdersCount()` | `int` — `round((months × 30) ÷ cycleDays)` |
+| `getValidation()` | `array` with `errors`, `titrationErrors`, `canCreate` |
+| `getPlanJson()` | Full JSON payload string |
+
+### LiveActions
+
+| Action | What it does |
+|---|---|
+| `addMedication / removeMedication` | Add/remove a medication row |
+| `setMedicationProduct` | Pick a medication, clears variant |
+| `setMedicationVariant` | Pick a variant |
+| `addInclusion / removeInclusion` | Add/remove an inclusion |
+| `setInclusionProduct` | Pick an inclusion product, clears variant |
+| `setInclusionScheduleType` | Switch between specific_orders / recurring_cycle |
+| `toggleInclusionOrder` | Toggle an order number pill |
+| `addUpsell / removeUpsell` | Add/remove an upsell |
+| `setUpsellProduct` | Pick an upsell product, clears variant |
+| `setUpsellScheduleType` | Switch between add-to-plan-orders / unique-recurring-cycle |
+| `setUpsellPricingType` | Switch between catalogue / custom price |
+| `addOffer / removeOffer` | Add/remove an offer |
+| `createPlan` | Validate and open the JSON modal |
+| `closePlanModal` | Close the modal |
 
 ---
 
-### Catalogue: `Catalogues`
+## Product catalogue
 
-**File:** `src/Catalogue/Catalogues.php`
+`src/Catalogue/Catalogues.php` is a static stub — hardcoded products and variants.
 
-Static stub returning all product data. The real system replaces this with calls to a product/formulary service.
+Each product has three flags:
 
-#### Product flags
-
-Every product in `products()` carries three boolean flags that control which section of the UI it appears in:
-
-| Flag | Meaning |
+| Flag | What it controls |
 |---|---|
-| `requiresPrescription` | Medication — appears in the Medications card |
-| `availableAsInclusion` | Can be added as a plan inclusion |
-| `availableAsUpsell` | Can be offered as an upsell |
+| `requiresPrescription` | Shows up in the Medications card |
+| `availableAsInclusion` | Can be added as an inclusion |
+| `availableAsUpsell` | Can be added as an upsell |
 
-A product can carry multiple flags (e.g. a supplement could be both an inclusion and an upsell).
-
-#### Helper methods
+A product can have more than one flag — e.g. a supplement that's both an inclusion and an upsell.
 
 ```php
-Catalogues::medications()         // requiresPrescription === true
-Catalogues::inclusionProducts()   // availableAsInclusion === true
-Catalogues::addonProducts()       // availableAsUpsell === true
+Catalogues::medications()
+Catalogues::inclusionProducts()
+Catalogues::addonProducts()
 Catalogues::productById($id)
 Catalogues::variantsByProductId($productId)
 Catalogues::variantById($variantId)
@@ -139,9 +151,9 @@ Catalogues::variantById($variantId)
 
 ---
 
-## API Contract
+## API contract
 
-Clicking **Create Plan** produces a JSON payload. Example:
+Hitting Create Plan generates something like this:
 
 ```json
 {
@@ -173,59 +185,52 @@ Clicking **Create Plan** produces a JSON payload. Example:
 }
 ```
 
-The full schema is visible in the dev panel at the bottom of the page.
+The live version (reflecting whatever you've built in the UI) is in the Data schema panel at the bottom of the page.
 
 ---
 
-## Scope: What's Built vs What's Not
+## What's built and what isn't
 
-Each card section in `TreatmentPlanBuilder.html.twig` has a `{# SCOPE — ... #}` comment block directly above it using the convention:
+Each partial has a `{# SCOPE — ... #}` block at the top. Search for `SCOPE —` in `templates/components/plan_builder/` to find the notes for any section. Convention is:
 
 ```
-✓  Built and serialised to API contract
-~  Partially built — known gaps or stub data
-○  Not built — needs real implementation
+✓  Built and in the API contract
+~  Partially built — gaps noted
+○  Not built
 ```
 
-Open the template and search for `SCOPE —` to jump to any section's notes.
+Quick summary:
 
-### Summary
-
-| Section | Status |
+| | |
 |---|---|
-| Plan name, duration, auto-renew, start date | ✓ Complete |
-| Medications (product/variant/titration/qty/prescription) | ✓ Complete (stub catalogue) |
-| Dispatch cycle + patient rescheduling | ✓ Complete |
-| Clinical protocols (prescription renewal, approval flag) | ✓ Complete |
-| Inclusions (product/variant/schedule/repeat-on-renewal) | ✓ Complete (stub catalogue) |
-| Offers (basket value / fixed-price subscription) | ✓ Complete |
-| Upsells (product/variant/schedule/pricing) | ✓ Complete (stub catalogue) |
-| Product catalogue integration | ○ Not built — replace `Catalogues.php` |
-| Database persistence / Draft saving | ○ Not built — no Doctrine entities yet |
-| Plan versioning / audit trail | ○ Not built |
-| Clinical workflows (approvals) | ○ Not built |
-| Payment / billing | ○ Not built |
+| Plan name, duration, auto-renew, start date | ✓ |
+| Medications — product, variant, titration, qty, prescription | ✓ stub catalogue |
+| Dispatch cycle + patient rescheduling | ✓ |
+| Clinical protocols — renewal period, dose-change approval | ✓ |
+| Inclusions — product, variant, schedule, repeat-on-renewal | ✓ stub catalogue |
+| Offers — basket value / fixed-price subscription | ✓ |
+| Upsells — product, variant, schedule, pricing | ✓ stub catalogue |
+| Real product catalogue | ○ replace `Catalogues.php` |
+| Database / draft saving | ○ no Doctrine yet |
+| Plan versioning | ○ |
+| Clinical approval workflows | ○ |
+| Payment / billing | ○ |
 
 ---
 
-## Code
+## Linting
 
 ```bash
-# Run PHP CS Fixer (dry-run)
+# PHP
 PHP_CS_FIXER_IGNORE_ENV=1 vendor/bin/php-cs-fixer fix --dry-run --diff
-
-# Apply fixes
 PHP_CS_FIXER_IGNORE_ENV=1 vendor/bin/php-cs-fixer fix
-```
 
-Config: `.php-cs-fixer.php` — Symfony ruleset + short array syntax + alpha imports + single quotes.
+# Twig
+php bin/console lint:twig templates/
+```
 
 ---
 
-## Dev Panels
+## Dev panel
 
-Two collapsible panels at the bottom of the page (visible in the browser):
-
-| Panel | What it shows |
-|---|---|
-| **Data schema** | Live JSON dump of all current LiveProp state (raw component data) |
+There's a collapsible **Data schema** panel at the bottom of the page — live JSON dump of all current component state. Useful for checking what would actually get sent to the API.
