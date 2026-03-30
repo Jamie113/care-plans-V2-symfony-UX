@@ -10,11 +10,14 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 WORKDIR /app
 
 COPY composer.json composer.lock ./
-RUN composer install --no-dev --optimize-autoloader --no-scripts --no-interaction
+RUN composer install --no-dev --no-scripts --no-interaction
 
 COPY . .
 
 ENV APP_ENV=prod
+
+# Regenerate the autoloader now that all source files are present
+RUN composer dump-autoload --no-dev --optimize --no-interaction
 
 RUN php bin/console cache:clear
 RUN php bin/console assets:install
