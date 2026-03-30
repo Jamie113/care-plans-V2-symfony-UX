@@ -14,7 +14,7 @@ RUN composer install --no-dev --optimize-autoloader --no-scripts --no-interactio
 
 COPY . .
 
-RUN composer run-script post-install-cmd --no-interaction
+RUN APP_ENV=prod composer run-script post-install-cmd --no-interaction
 
 EXPOSE 8000
 
