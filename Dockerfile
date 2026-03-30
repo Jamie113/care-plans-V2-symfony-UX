@@ -14,12 +14,15 @@ RUN composer install --no-dev --optimize-autoloader --no-scripts --no-interactio
 
 COPY . .
 
-RUN APP_ENV=prod composer run-script post-install-cmd --no-interaction
+ENV APP_ENV=prod
 
-RUN APP_ENV=prod php bin/console tailwind:build --minify
-RUN APP_ENV=prod php bin/console asset-map:compile
-RUN APP_ENV=prod php bin/console cache:warmup
+RUN php bin/console cache:clear
+RUN php bin/console assets:install
+RUN php bin/console importmap:install
+RUN php bin/console tailwind:build --minify
+RUN php bin/console asset-map:compile
+RUN php bin/console cache:warmup
 
 EXPOSE 8000
 
-CMD php -S 0.0.0.0:${PORT:-8000} -t public/ public/index.php
+CMD php -S 0.0.0.0:${PORT:-8000} -t public/ public/router.php
