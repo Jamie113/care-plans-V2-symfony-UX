@@ -18,4 +18,4 @@ RUN APP_ENV=prod composer run-script post-install-cmd --no-interaction
 
 EXPOSE 8000
 
-CMD php -S 0.0.0.0:${PORT:-8000} -t public/
+CMD php -S 0.0.0.0:${PORT:-8000} -t public/ public/index.php
