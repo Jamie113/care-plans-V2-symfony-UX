@@ -16,6 +16,8 @@ COPY . .
 
 RUN APP_ENV=prod composer run-script post-install-cmd --no-interaction
 
+RUN APP_ENV=prod php bin/console tailwind:build --minify
+
 EXPOSE 8000
 
 CMD php -S 0.0.0.0:${PORT:-8000} -t public/ public/index.php
