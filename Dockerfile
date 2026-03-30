@@ -17,6 +17,7 @@ COPY . .
 RUN APP_ENV=prod composer run-script post-install-cmd --no-interaction
 
 RUN APP_ENV=prod php bin/console tailwind:build --minify
+RUN APP_ENV=prod php bin/console cache:warmup
 
 EXPOSE 8000
 
