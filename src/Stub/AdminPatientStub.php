@@ -26,9 +26,80 @@ final class AdminPatientStub
         ];
     }
 
+    /**
+     * Historical plans for patients who have had more than one care plan.
+     * Shown on the patient detail page but not in the main patient list.
+     */
+    private static function historicalPlansData(): array
+    {
+        return [
+            // James Thornton (CUS-002) — WL Starter 6 Month before his current Advanced 12 Month
+            self::make('PLN-002-H', 'CUS-002', 'Weightloss', 0.00, 102, 'James Thornton', 'j.thornton@gmail.com', '07700 900 456', '1979-07-22', 'WL Starter 6 Month', 'Wegovy', '0.25mg', 'expired', '2025-05-01', null, '2025-10-28', null, '2025-10-28', 6, 6, 28, 89.00, null, [['2025-10-28', 'plan_completed', 'All 6 orders shipped — plan completed', 'System'], ['2025-05-01', 'plan_started', 'Plan started', 'System']], '0.25mg', null, 89.00, false, null, [['ORD-006', 'TRK-JTH006', 'delivered', '2025-10-28', 'Wegovy 0.25mg ×1'], ['ORD-001', 'TRK-JTH001', 'delivered', '2025-05-01', 'Wegovy 0.25mg ×1']]),
+            // Sophie Williams (CUS-015) — WL Pro 3 Month before her current Advanced 12 Month
+            self::make('PLN-015-H', 'CUS-015', 'Weightloss', 0.00, 152, 'Sophie Williams', 'swilliams@gmail.com', '07700 900 999', '1992-09-30', 'WL Pro 3 Month', 'Mounjaro', '5mg', 'expired', '2025-06-01', null, '2025-08-30', null, '2025-08-30', 3, 3, 28, 119.00, null, [['2025-08-30', 'plan_completed', 'All 3 orders shipped — plan completed', 'System'], ['2025-06-01', 'plan_started', 'Plan started', 'System']], '5mg', null, 119.00, false, null, [['ORD-003', 'TRK-SWH003', 'delivered', '2025-08-30', 'Mounjaro 5mg ×1'], ['ORD-001', 'TRK-SWH001', 'delivered', '2025-06-01', 'Mounjaro 5mg ×1']]),
+        ];
+    }
+
+    /**
+     * Returns one row per patient (their current/latest plan), with planCount added.
+     * Used by the patient list page.
+     */
+    public static function allPatients(): array
+    {
+        $current    = self::all();
+        $historical = self::historicalPlansData();
+
+        // Count total plans per customer (current + historical)
+        $planCounts = [];
+        foreach (array_merge($current, $historical) as $p) {
+            $planCounts[$p['customerId']] = ($planCounts[$p['customerId']] ?? 0) + 1;
+        }
+
+        return array_map(static function (array $p) use ($planCounts): array {
+            $p['planCount'] = $planCounts[$p['customerId']] ?? 1;
+            return $p;
+        }, $current);
+    }
+
+    /**
+     * Returns patient info and all their plans (current first, historical after).
+     * Used by the patient detail page.
+     */
+    public static function findByCustomerId(string $customerId): ?array
+    {
+        $currentPlan = null;
+        foreach (self::all() as $plan) {
+            if ($plan['customerId'] === $customerId) {
+                $currentPlan = $plan;
+                break;
+            }
+        }
+
+        if (!$currentPlan) {
+            return null;
+        }
+
+        $allPlans = [$currentPlan];
+        foreach (self::historicalPlansData() as $plan) {
+            if ($plan['customerId'] === $customerId) {
+                $allPlans[] = $plan;
+            }
+        }
+
+        return [
+            'customerId' => $currentPlan['customerId'],
+            'name'       => $currentPlan['patientName'],
+            'email'      => $currentPlan['patientEmail'],
+            'phone'      => $currentPlan['patientPhone'],
+            'dob'        => $currentPlan['patientDob'],
+            'gender'     => $currentPlan['gender'],
+            'plans'      => $allPlans,
+        ];
+    }
+
     public static function findById(int $id): ?array
     {
-        foreach (self::all() as $plan) {
+        foreach (array_merge(self::all(), self::historicalPlansData()) as $plan) {
             if ($plan['id'] === $id) {
                 return $plan;
             }

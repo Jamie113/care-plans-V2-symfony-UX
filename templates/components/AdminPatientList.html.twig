@@ -1,0 +1,14 @@
+{# Root element — {{ attributes }} injects the required Live Component attributes #}
+<div {{ attributes }}>
+    <div class="relative">
+        {# Loading bar #}
+        <div data-loading="show" class="hidden absolute inset-x-0 top-0 h-0.5 z-10 overflow-hidden rounded-full bg-blue-100">
+            <div class="h-full animate-pulse bg-blue-500 w-2/3 rounded-full"></div>
+        </div>
+
+        <div data-loading="addClass(opacity-60 pointer-events-none)">
+            {% include 'components/admin_patient_list/_filters.html.twig' %}
+            {% include 'components/admin_patient_list/_table.html.twig' %}
+        </div>
+    </div>
+</div>

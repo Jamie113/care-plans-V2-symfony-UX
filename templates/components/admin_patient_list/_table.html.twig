@@ -1,0 +1,147 @@
+{% if filteredPatients is empty %}
+    <div class="bg-white rounded-2xl border border-gray-200 shadow-sm px-6 py-16 text-center">
+        <svg class="mx-auto w-10 h-10 text-gray-300 mb-3" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0"/>
+        </svg>
+        <p class="text-sm font-medium text-gray-500">No patients match your search</p>
+        <p class="text-xs text-gray-400 mt-1">Try adjusting the filters above</p>
+    </div>
+{% else %}
+    <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-100">
+                <thead>
+                    <tr class="bg-gray-50">
+                        <th class="px-4 sm:px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Patient</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide hidden sm:table-cell">Customer ID</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide hidden md:table-cell">Category</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide hidden sm:table-cell">Current plan</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Status</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide hidden lg:table-cell">Next order</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide hidden lg:table-cell">Next billing</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide hidden md:table-cell">Plans</th>
+                        <th class="px-4 sm:px-6 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wide"></th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                    {% for patient in filteredPatients %}
+                        <tr class="hover:bg-gray-50 transition-colors">
+
+                            {# Patient #}
+                            <td class="px-4 sm:px-6 py-4">
+                                <p class="text-sm font-semibold text-gray-900">{{ patient.patientName }}</p>
+                                <p class="text-xs text-gray-500 mt-0.5">{{ patient.patientEmail }}</p>
+                                <p class="text-xs text-gray-400">{{ patient.patientPhone }}</p>
+                            </td>
+
+                            {# Customer ID #}
+                            <td class="px-4 py-4 hidden sm:table-cell">
+                                <p class="text-xs font-mono text-gray-600">{{ patient.customerId }}</p>
+                            </td>
+
+                            {# Category #}
+                            <td class="px-4 py-4 hidden md:table-cell">
+                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-600">{{ patient.category }}</span>
+                            </td>
+
+                            {# Current plan #}
+                            <td class="px-4 py-4 hidden sm:table-cell max-w-[180px]">
+                                <p class="text-sm text-gray-900 truncate" title="{{ patient.planName }}">{{ patient.planName }}</p>
+                                <p class="text-xs font-mono text-gray-400 mt-0.5">{{ patient.planId }}</p>
+                            </td>
+
+                            {# Status badge #}
+                            <td class="px-4 py-4">
+                                {% if patient.status == 'active' %}
+                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-green-50 text-green-700 border border-green-200">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-green-500 flex-shrink-0"></span>active
+                                    </span>
+                                {% elseif patient.status == 'requested-renew' %}
+                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-amber-500 flex-shrink-0"></span>requested-renew
+                                    </span>
+                                {% elseif patient.status == 'requested-change' %}
+                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-blue-500 flex-shrink-0"></span>requested-change
+                                    </span>
+                                {% elseif patient.status == 'requested-approve' %}
+                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-purple-50 text-purple-700 border border-purple-200">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-purple-500 flex-shrink-0"></span>requested-approve
+                                    </span>
+                                {% elseif patient.status == 'deactivated' %}
+                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-red-50 text-red-700 border border-red-200">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-red-500 flex-shrink-0"></span>deactivated
+                                    </span>
+                                {% elseif patient.status == 'expired' %}
+                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-500 border border-gray-200">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-gray-400 flex-shrink-0"></span>expired
+                                    </span>
+                                {% else %}
+                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-500 border border-gray-200">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-gray-400 flex-shrink-0"></span>{{ patient.status }}
+                                    </span>
+                                {% endif %}
+                            </td>
+
+                            {# Next order #}
+                            <td class="px-4 py-4 hidden lg:table-cell">
+                                {% if patient.nextOrderDate %}
+                                    <p class="text-sm text-gray-900">{{ patient.nextOrderDate|date('d M Y') }}</p>
+                                {% else %}
+                                    <p class="text-sm text-gray-400">—</p>
+                                {% endif %}
+                            </td>
+
+                            {# Next billing #}
+                            <td class="px-4 py-4 hidden lg:table-cell">
+                                {% if patient.nextBillingDate %}
+                                    <p class="text-sm text-gray-900">{{ patient.nextBillingDate|date('d M Y') }}</p>
+                                {% else %}
+                                    <p class="text-sm text-gray-400">—</p>
+                                {% endif %}
+                            </td>
+
+                            {# Plan count #}
+                            <td class="px-4 py-4 hidden md:table-cell">
+                                <span class="text-sm text-gray-600">{{ patient.planCount }}</span>
+                                <span class="text-xs text-gray-400 ml-0.5">{{ patient.planCount == 1 ? 'plan' : 'plans' }}</span>
+                            </td>
+
+                            {# View link → patient page #}
+                            <td class="px-4 sm:px-6 py-4 text-right">
+                                <a
+                                    href="{{ path('admin_patient_detail', {customerId: patient.customerId}) }}"
+                                    class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 hover:border-gray-300 transition-colors"
+                                >
+                                    View
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
+                                    </svg>
+                                </a>
+                            </td>
+
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {# Pagination #}
+        <div class="px-4 sm:px-6 py-3 border-t border-gray-100 bg-gray-50 flex items-center justify-between">
+            <p class="text-xs text-gray-500">
+                Showing <span class="font-medium text-gray-700">1–{{ filteredPatients|length }}</span> of <span class="font-medium text-gray-700">{{ filteredPatients|length }}</span> patients
+            </p>
+            <div class="flex items-center gap-1">
+                <button disabled class="inline-flex items-center px-2.5 py-1.5 text-xs font-medium text-gray-300 bg-white border border-gray-200 rounded-lg cursor-not-allowed">
+                    <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+                    Previous
+                </button>
+                <button class="inline-flex items-center px-2.5 py-1.5 text-xs font-medium text-white bg-gray-800 border border-gray-800 rounded-lg">1</button>
+                <button disabled class="inline-flex items-center px-2.5 py-1.5 text-xs font-medium text-gray-300 bg-white border border-gray-200 rounded-lg cursor-not-allowed">
+                    Next
+                    <svg class="w-3.5 h-3.5 ml-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+                </button>
+            </div>
+        </div>
+    </div>
+{% endif %}
