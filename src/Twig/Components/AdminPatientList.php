@@ -14,47 +14,25 @@ class AdminPatientList
 {
     use DefaultActionTrait;
 
-    // Specific filters — applied first, each narrows the result set
     #[LiveProp(writable: true)]
-    public string $filterCustomerId = '';
+    public string $filterFirstName = '';
 
     #[LiveProp(writable: true)]
-    public string $statusFilter = '';
+    public string $filterLastName = '';
 
     #[LiveProp(writable: true)]
-    public string $filterCategory = '';
+    public string $filterEmail = '';
 
     #[LiveProp(writable: true)]
-    public string $filterPlanName = '';
-
-    #[LiveProp(writable: true)]
-    public string $filterDateFrom = '';
-
-    #[LiveProp(writable: true)]
-    public string $filterDateTo = '';
-
-    #[LiveProp(writable: true)]
-    public string $filterBillingDateFrom = '';
-
-    #[LiveProp(writable: true)]
-    public string $filterBillingDateTo = '';
-
-    // Fuzzy search — fallback for name / email, applied last
-    #[LiveProp(writable: true)]
-    public string $search = '';
+    public string $filterPhone = '';
 
     #[LiveAction]
     public function clearFilters(): void
     {
-        $this->filterCustomerId      = '';
-        $this->statusFilter          = '';
-        $this->filterCategory        = '';
-        $this->filterPlanName        = '';
-        $this->filterDateFrom        = '';
-        $this->filterDateTo          = '';
-        $this->filterBillingDateFrom = '';
-        $this->filterBillingDateTo   = '';
-        $this->search                = '';
+        $this->filterFirstName = '';
+        $this->filterLastName  = '';
+        $this->filterEmail     = '';
+        $this->filterPhone     = '';
     }
 
     #[ExposeInTemplate]
@@ -62,45 +40,35 @@ class AdminPatientList
     {
         $patients = AdminPatientStub::allPatients();
 
-        if ('' !== $this->filterCustomerId) {
-            $q = mb_strtolower($this->filterCustomerId);
-            $patients = array_filter($patients, fn($p) => str_contains(mb_strtolower($p['customerId']), $q));
+        if ('' !== $this->filterFirstName) {
+            $q = mb_strtolower($this->filterFirstName);
+            // Match against the first word of patientName
+            $patients = array_filter($patients, function ($p) use ($q) {
+                $parts = explode(' ', mb_strtolower($p['patientName']), 2);
+                return str_contains($parts[0], $q);
+            });
         }
 
-        if ('' !== $this->statusFilter) {
-            $patients = array_filter($patients, fn($p) => $p['status'] === $this->statusFilter);
+        if ('' !== $this->filterLastName) {
+            $q = mb_strtolower($this->filterLastName);
+            // Match against everything after the first word
+            $patients = array_filter($patients, function ($p) use ($q) {
+                $parts = explode(' ', mb_strtolower($p['patientName']), 2);
+                return isset($parts[1]) && str_contains($parts[1], $q);
+            });
         }
 
-        if ('' !== $this->filterCategory) {
-            $patients = array_filter($patients, fn($p) => $p['category'] === $this->filterCategory);
+        if ('' !== $this->filterEmail) {
+            $q = mb_strtolower($this->filterEmail);
+            $patients = array_filter($patients, fn($p) => str_contains(mb_strtolower($p['patientEmail']), $q));
         }
 
-        if ('' !== $this->filterPlanName) {
-            $patients = array_filter($patients, fn($p) => $p['planName'] === $this->filterPlanName);
-        }
-
-        if ('' !== $this->filterDateFrom) {
-            $patients = array_filter($patients, fn($p) => null !== $p['nextOrderDate'] && $p['nextOrderDate'] >= $this->filterDateFrom);
-        }
-
-        if ('' !== $this->filterDateTo) {
-            $patients = array_filter($patients, fn($p) => null !== $p['nextOrderDate'] && $p['nextOrderDate'] <= $this->filterDateTo);
-        }
-
-        if ('' !== $this->filterBillingDateFrom) {
-            $patients = array_filter($patients, fn($p) => null !== $p['nextBillingDate'] && $p['nextBillingDate'] >= $this->filterBillingDateFrom);
-        }
-
-        if ('' !== $this->filterBillingDateTo) {
-            $patients = array_filter($patients, fn($p) => null !== $p['nextBillingDate'] && $p['nextBillingDate'] <= $this->filterBillingDateTo);
-        }
-
-        if ('' !== $this->search) {
-            $q = mb_strtolower($this->search);
-            $patients = array_filter($patients, fn($p) =>
-                str_contains(mb_strtolower($p['patientName']), $q)
-                || str_contains(mb_strtolower($p['patientEmail']), $q)
-            );
+        if ('' !== $this->filterPhone) {
+            // Strip spaces for comparison so "07700900123" matches "07700 900 123"
+            $q = preg_replace('/\s+/', '', $this->filterPhone);
+            $patients = array_filter($patients, function ($p) use ($q) {
+                return str_contains(preg_replace('/\s+/', '', $p['patientPhone']), $q);
+            });
         }
 
         return array_values($patients);
@@ -109,14 +77,9 @@ class AdminPatientList
     #[ExposeInTemplate]
     public function hasActiveFilters(): bool
     {
-        return '' !== $this->filterCustomerId
-            || '' !== $this->statusFilter
-            || '' !== $this->filterCategory
-            || '' !== $this->filterPlanName
-            || '' !== $this->filterDateFrom
-            || '' !== $this->filterDateTo
-            || '' !== $this->filterBillingDateFrom
-            || '' !== $this->filterBillingDateTo
-            || '' !== $this->search;
+        return '' !== $this->filterFirstName
+            || '' !== $this->filterLastName
+            || '' !== $this->filterEmail
+            || '' !== $this->filterPhone;
     }
 }

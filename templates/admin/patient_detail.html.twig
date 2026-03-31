@@ -102,16 +102,11 @@
                     </thead>
                     <tbody class="divide-y divide-gray-100">
                         {% for plan in patient.plans %}
-                            <tr class="hover:bg-gray-50 transition-colors {% if loop.first and plan.status not in ['expired','deactivated'] %}bg-blue-50/30{% endif %}">
+                            <tr class="hover:bg-gray-50 transition-colors">
 
                                 {# Plan name + category #}
                                 <td class="px-4 sm:px-6 py-4">
-                                    <div class="flex items-center gap-2 flex-wrap">
-                                        <p class="text-sm font-medium text-gray-900 truncate max-w-[180px]" title="{{ plan.planName }}">{{ plan.planName }}</p>
-                                        {% if loop.first and plan.status not in ['expired','deactivated'] %}
-                                            <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-700 flex-shrink-0">current</span>
-                                        {% endif %}
-                                    </div>
+                                    <p class="text-sm font-medium text-gray-900 truncate max-w-[180px]" title="{{ plan.planName }}">{{ plan.planName }}</p>
                                     <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-600 mt-1">{{ plan.category }}</span>
                                 </td>
 
