@@ -17,15 +17,6 @@
                     </div>
                     <div>
                         <h1 class="text-sm sm:text-lg font-semibold text-gray-900 leading-none">Patient Care Plans</h1>
-                        <p class="hidden sm:block text-xs text-gray-500 mt-1">
-                            {{ stats.active }} active
-                            {% if stats.needsAction > 0 %}
-                                <span class="text-gray-300 mx-1">·</span>
-                                <span class="text-amber-600">{{ stats.needsAction }} need{{ stats.needsAction == 1 ? 's' : '' }} attention</span>
-                            {% endif %}
-                            <span class="text-gray-300 mx-1">·</span>
-                            {{ stats.deactivated }} deactivated
-                        </p>
                     </div>
                 </div>
 

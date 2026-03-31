@@ -25,6 +25,9 @@ class AdminPlanList
     public string $statusFilter = '';
 
     #[LiveProp(writable: true)]
+    public string $filterCategory = '';
+
+    #[LiveProp(writable: true)]
     public string $filterPlanName = '';
 
     #[LiveProp(writable: true)]
@@ -33,6 +36,12 @@ class AdminPlanList
     #[LiveProp(writable: true)]
     public string $filterDateTo = '';
 
+    #[LiveProp(writable: true)]
+    public string $filterBillingDateFrom = '';
+
+    #[LiveProp(writable: true)]
+    public string $filterBillingDateTo = '';
+
     // Fuzzy search — fallback for name / email, applied last
     #[LiveProp(writable: true)]
     public string $search = '';
@@ -40,13 +49,16 @@ class AdminPlanList
     #[LiveAction]
     public function clearFilters(): void
     {
-        $this->filterPlanId     = '';
-        $this->filterCustomerId = '';
-        $this->statusFilter     = '';
-        $this->filterPlanName   = '';
-        $this->filterDateFrom   = '';
-        $this->filterDateTo     = '';
-        $this->search           = '';
+        $this->filterPlanId          = '';
+        $this->filterCustomerId      = '';
+        $this->statusFilter          = '';
+        $this->filterCategory        = '';
+        $this->filterPlanName        = '';
+        $this->filterDateFrom        = '';
+        $this->filterDateTo          = '';
+        $this->filterBillingDateFrom = '';
+        $this->filterBillingDateTo   = '';
+        $this->search                = '';
     }
 
     #[ExposeInTemplate]
@@ -68,9 +80,12 @@ class AdminPlanList
             $plans = array_filter($plans, fn($p) => $p['status'] === $this->statusFilter);
         }
 
+        if ('' !== $this->filterCategory) {
+            $plans = array_filter($plans, fn($p) => $p['category'] === $this->filterCategory);
+        }
+
         if ('' !== $this->filterPlanName) {
-            $q = mb_strtolower($this->filterPlanName);
-            $plans = array_filter($plans, fn($p) => str_contains(mb_strtolower($p['planName']), $q));
+            $plans = array_filter($plans, fn($p) => $p['planName'] === $this->filterPlanName);
         }
 
         if ('' !== $this->filterDateFrom) {
@@ -79,6 +94,14 @@ class AdminPlanList
 
         if ('' !== $this->filterDateTo) {
             $plans = array_filter($plans, fn($p) => null !== $p['nextOrderDate'] && $p['nextOrderDate'] <= $this->filterDateTo);
+        }
+
+        if ('' !== $this->filterBillingDateFrom) {
+            $plans = array_filter($plans, fn($p) => null !== $p['nextBillingDate'] && $p['nextBillingDate'] >= $this->filterBillingDateFrom);
+        }
+
+        if ('' !== $this->filterBillingDateTo) {
+            $plans = array_filter($plans, fn($p) => null !== $p['nextBillingDate'] && $p['nextBillingDate'] <= $this->filterBillingDateTo);
         }
 
         if ('' !== $this->search) {
@@ -98,9 +121,12 @@ class AdminPlanList
         return '' !== $this->filterPlanId
             || '' !== $this->filterCustomerId
             || '' !== $this->statusFilter
+            || '' !== $this->filterCategory
             || '' !== $this->filterPlanName
             || '' !== $this->filterDateFrom
             || '' !== $this->filterDateTo
+            || '' !== $this->filterBillingDateFrom
+            || '' !== $this->filterBillingDateTo
             || '' !== $this->search;
     }
 }
