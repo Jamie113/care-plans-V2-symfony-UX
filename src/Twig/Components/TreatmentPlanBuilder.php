@@ -128,8 +128,9 @@ class TreatmentPlanBuilder
             }
 
             return array_merge($m, [
-                'medicationId' => $medicationId,
-                'variants'     => [['key' => (string) Uuid::v4(), 'variantId' => '', 'circuitBreaker' => false]],
+                'medicationId'     => $medicationId,
+                'variants'         => [['key' => (string) Uuid::v4(), 'variantId' => '', 'circuitBreaker' => false]],
+                'titrationEnabled' => false,
             ]);
         }, $this->medications);
     }
@@ -429,12 +430,15 @@ class TreatmentPlanBuilder
             if (empty($m['medicationId'])) {
                 return null;
             }
+            if (empty($m['titrationEnabled'])) {
+                return null;
+            }
             $hasVariant = !empty($m['variants']) && array_any(
                 $m['variants'],
                 fn ($v) => !empty($v['variantId'])
             );
             if (!$hasVariant) {
-                return 'Select at least one dose step for this medication.';
+                return 'Select at least one variant for the titration path.';
             }
             return null;
         }, $this->medications);
@@ -544,6 +548,7 @@ class TreatmentPlanBuilder
             'variants'         => [
                 ['key' => (string) Uuid::v4(), 'variantId' => '', 'circuitBreaker' => false],
             ],
+            'titrationEnabled' => false,
             'quantityPerOrder' => 1,
             'prescription'     => [
                 'renewalEveryShipments'  => '3',
