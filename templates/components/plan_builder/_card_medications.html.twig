@@ -1,20 +1,6 @@
 {# ════════════════════════════════════════════════════════════ #}
 {# Medications card                                             #}
 {# ════════════════════════════════════════════════════════════ #}
-{#
-    SCOPE — Medications
-    ✓  Product → variant two-step selection (product clears variant on change)
-    ✓  Multiple medications per plan (add / remove with UUID keys)
-    ✓  Quantity per order (integer, min 1)
-    ✓  Titration enabled toggle + titration path select (validated if enabled)
-    ✓  Prescription renewal period select per medication
-    ~  Catalogue is a static PHP stub — real system must fetch from product/formulary service
-    ~  Quantity validated as int only; real system needs max-qty-per-order business rules
-    ○  Dose-change clinical approval workflow
-    ○  Titration schedule detail (dose steps, timing, thresholds)
-    ○  Stock / formulary availability check at plan creation
-    ○  Medication interaction warnings
-#}
 <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
     <div class="flex items-center gap-3 px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-100">
         <div class="flex items-center justify-center w-8 h-8 bg-gray-100 rounded-xl text-gray-500">
@@ -24,7 +10,7 @@
         </div>
         <div>
             <h2 class="text-sm font-semibold text-gray-900">Medications</h2>
-            <p class="text-xs text-gray-500">Add the medications included in this plan</p>
+            <p class="text-xs text-gray-500">Add the medications included in this plan. The dose steps you define become the titration path.</p>
         </div>
     </div>
 
@@ -32,10 +18,9 @@
 
         {# Medication rows #}
         {% for i, med in medications %}
-            {% set titrationError = validation.titrationErrors[i] ?? null %}
             {% set productData = med.medicationId ? (medicationCatalogue|filter(m => m.id == med.medicationId)|first|default(null)) : null %}
             {% set productVariants = productData ? (productData.variants ?? []) : [] %}
-            {% set selectedVariant = med.variantId ? (productVariants|filter(v => v.id == med.variantId)|first|default(null)) : null %}
+            {% set stepError = validation.titrationErrors[i] ?? null %}
 
             <div class="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
 
@@ -79,71 +64,98 @@
 
                     {% if med.medicationId %}
 
-                        {# Variant select #}
+                        {# Qty per order #}
                         <div class="pb-4 border-b border-gray-100">
-                            <label class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 block">Variant</label>
-                            <select
-                                data-model="medications.{{ i }}.variantId"
-                                class="w-full px-3 py-2 text-sm text-gray-900 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-gray-900/10 focus:border-gray-500 transition-colors cursor-pointer"
+                            <label class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 block">Qty per order</label>
+                            <input
+                                type="number"
+                                min="1"
+                                data-model="on(input)|medications.{{ i }}.quantityPerOrder"
+                                value="{{ med.quantityPerOrder }}"
+                                class="w-24 px-3 py-2 text-sm text-gray-900 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-gray-900/10 transition-colors"
                             >
-                                <option value="">Select variant…</option>
-                                {% for v in productVariants %}
-                                    <option value="{{ v.id }}" {% if v.id == med.variantId %}selected{% endif %}>{{ v.name }} — £{{ v.price|number_format(2) }}</option>
-                                {% endfor %}
-                            </select>
-                            {% if selectedVariant %}
-                                <p class="text-xs text-gray-400 mt-2">Catalogue price <span class="font-semibold text-emerald-600">£{{ selectedVariant.price|number_format(2) }}</span> per order</p>
+                        </div>
+
+                        {# Dose steps (titration path) #}
+                        <div>
+                            <div class="flex items-center justify-between mb-2">
+                                <label class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Dose steps</label>
+                                <p class="text-xs text-gray-400">Steps define the titration path in order</p>
+                            </div>
+
+                            {% if stepError %}
+                                <p class="text-xs text-red-500 flex items-center gap-1.5 mb-2">
+                                    <svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                    {{ stepError }}
+                                </p>
                             {% endif %}
-                        </div>
 
-                        {# Quantity + Titration #}
-                        <div class="flex items-start justify-between gap-6">
-                            <div>
-                                <label class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 block">Qty per order</label>
-                                <input
-                                    type="number"
-                                    min="1"
-                                    data-model="on(input)|medications.{{ i }}.quantityPerOrder"
-                                    value="{{ med.quantityPerOrder }}"
-                                    class="w-24 px-3 py-2 text-sm text-gray-900 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-gray-900/10 transition-colors"
-                                >
-                            </div>
-                            <div>
-                                <label class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 block">Titration</label>
-                                <label class="flex items-center gap-2.5 cursor-pointer select-none">
-                                    <span class="text-sm text-gray-600">Titrate dose over time</span>
-                                    <input
-                                        type="checkbox"
-                                        data-model="medications.{{ i }}.titrationEnabled"
-                                        {% if med.titrationEnabled %}checked{% endif %}
-                                        class="sr-only peer"
-                                    >
-                                    <div class="relative w-10 h-5 flex-shrink-0 bg-gray-200 rounded-full peer peer-checked:bg-blue-600 transition-colors after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-5"></div>
-                                </label>
-                            </div>
-                        </div>
+                            <div class="space-y-2">
+                                {% for j, vs in med.variants %}
+                                    <div class="flex items-center gap-2">
 
-                        {# Titration path (shown when toggle on) #}
-                        {% if med.titrationEnabled %}
-                            {% set availableTitrations = titrationCatalogue|filter(t => t.medicationId == med.medicationId) %}
-                            <div class="space-y-2 pt-1">
-                                <select
-                                    data-model="medications.{{ i }}.titrationPathId"
-                                    class="w-full px-3 py-2 text-sm text-gray-900 bg-white border {{ titrationError ? 'border-red-400 bg-red-50' : 'border-gray-200' }} rounded-xl focus:outline-none focus:ring-2 focus:ring-gray-900/10 transition-colors cursor-pointer"
-                                >
-                                    <option value="">Select titration path…</option>
-                                    {% for t in availableTitrations %}
-                                        <option value="{{ t.id }}" {% if t.id == med.titrationPathId %}selected{% endif %}>{{ t.name }}</option>
-                                    {% endfor %}
-                                </select>
-                                {% if titrationError %}
-                                    <p class="text-xs text-red-500 flex items-center gap-1.5">
-                                        <svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                                        {{ titrationError }}
-                                    </p>
-                                {% endif %}
+                                        {# Step number pill #}
+                                        <span class="flex-shrink-0 w-6 h-6 flex items-center justify-center rounded-full bg-gray-100 text-xs font-semibold text-gray-500">{{ j + 1 }}</span>
+
+                                        {# Variant select #}
+                                        <select
+                                            data-model="medications.{{ i }}.variants.{{ j }}.variantId"
+                                            class="flex-1 px-3 py-2 text-sm text-gray-900 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-gray-900/10 focus:border-gray-500 transition-colors cursor-pointer"
+                                        >
+                                            <option value="">Select dose…</option>
+                                            {% for v in productVariants %}
+                                                <option value="{{ v.id }}" {% if v.id == vs.variantId %}selected{% endif %}>{{ v.name }}</option>
+                                            {% endfor %}
+                                        </select>
+
+                                        {# Circuit breaker toggle #}
+                                        <label class="flex items-center gap-1.5 cursor-pointer flex-shrink-0" title="Circuit breaker — stops auto-titration at this dose">
+                                            <input
+                                                type="checkbox"
+                                                data-model="medications.{{ i }}.variants.{{ j }}.circuitBreaker"
+                                                {% if vs.circuitBreaker %}checked{% endif %}
+                                                class="sr-only peer"
+                                            >
+                                            <div class="relative w-8 h-4 bg-gray-200 rounded-full peer peer-checked:bg-amber-500 transition-colors after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:after:translate-x-4"></div>
+                                            <span class="text-xs text-gray-500 peer-checked:text-amber-700 transition-colors">Circuit breaker</span>
+                                        </label>
+
+                                        {# Remove step button (hidden when only 1 step) #}
+                                        {% if med.variants|length > 1 %}
+                                            <button
+                                                type="button"
+                                                data-action="live#action"
+                                                data-live-action-param="removeVariantStep"
+                                                data-live-key-param="{{ med.key }}"
+                                                data-live-variant-key-param="{{ vs.key }}"
+                                                class="p-1 rounded-lg text-gray-300 hover:text-red-400 hover:bg-red-50 transition-colors flex-shrink-0"
+                                            >
+                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                                                </svg>
+                                            </button>
+                                        {% else %}
+                                            <span class="w-6 flex-shrink-0"></span>
+                                        {% endif %}
+
+                                    </div>
+                                {% endfor %}
                             </div>
-                        {% endif %}
+
+                            {# Add dose step #}
+                            <button
+                                type="button"
+                                data-action="live#action"
+                                data-live-action-param="addVariantStep"
+                                data-live-key-param="{{ med.key }}"
+                                class="mt-2 flex items-center gap-2 w-full px-3 py-2 text-xs font-medium text-blue-700 border border-dashed border-blue-300 rounded-xl hover:bg-blue-50 hover:border-blue-400 transition-colors"
+                            >
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
+                                </svg>
+                                Add dose step
+                            </button>
+                        </div>
 
                     {% endif %}{# end if medicationId #}
 

@@ -128,11 +128,35 @@ class TreatmentPlanBuilder
             }
 
             return array_merge($m, [
-                'medicationId'     => $medicationId,
-                'variantId'        => '',
-                'titrationPathId'  => '',
-                'titrationEnabled' => false,
+                'medicationId' => $medicationId,
+                'variants'     => [['key' => (string) Uuid::v4(), 'variantId' => '', 'circuitBreaker' => false]],
             ]);
+        }, $this->medications);
+    }
+
+    #[LiveAction]
+    public function addVariantStep(#[LiveArg] string $key): void
+    {
+        $this->medications = array_map(function ($m) use ($key) {
+            if ($m['key'] !== $key) {
+                return $m;
+            }
+            $m['variants'][] = ['key' => (string) Uuid::v4(), 'variantId' => '', 'circuitBreaker' => false];
+            return $m;
+        }, $this->medications);
+    }
+
+    #[LiveAction]
+    public function removeVariantStep(#[LiveArg] string $key, #[LiveArg] string $variantKey): void
+    {
+        $this->medications = array_map(function ($m) use ($key, $variantKey) {
+            if ($m['key'] !== $key) {
+                return $m;
+            }
+            $m['variants'] = array_values(
+                array_filter($m['variants'], fn ($v) => $v['key'] !== $variantKey)
+            );
+            return $m;
         }, $this->medications);
     }
 
@@ -353,6 +377,12 @@ class TreatmentPlanBuilder
     }
 
     #[ExposeInTemplate]
+    public function getShipmentFrequencyOptions(): array
+    {
+        return Catalogues::shipmentFrequencyOptions();
+    }
+
+    #[ExposeInTemplate]
     public function getInclusionProducts(): array
     {
         return Catalogues::inclusionProducts();
@@ -399,10 +429,13 @@ class TreatmentPlanBuilder
             if (empty($m['medicationId'])) {
                 return null;
             }
-            if (!empty($m['titrationEnabled']) && empty($m['titrationPathId'])) {
-                return 'Select a titration path for this medication.';
+            $hasVariant = !empty($m['variants']) && array_any(
+                $m['variants'],
+                fn ($v) => !empty($v['variantId'])
+            );
+            if (!$hasVariant) {
+                return 'Select at least one dose step for this medication.';
             }
-
             return null;
         }, $this->medications);
 
@@ -455,11 +488,11 @@ class TreatmentPlanBuilder
             ],
             'medications' => array_values(array_map(fn ($m) => [
                 'productId' => $m['medicationId'],
-                'variantId' => $m['variantId'],
                 'qty'       => $m['quantityPerOrder'],
-                'titration' => $m['titrationEnabled'] ? [
-                    'pathId' => $m['titrationPathId'],
-                ] : null,
+                'titrationPath' => array_values(array_map(fn ($v) => [
+                    'variantId'      => $v['variantId'],
+                    'circuitBreaker' => $v['circuitBreaker'],
+                ], array_filter($m['variants'], fn ($v) => !empty($v['variantId'])))),
                 'prescription' => $m['prescription'],
             ], array_filter($this->medications, fn ($m) => $m['medicationId'] !== ''))),
             'inclusions' => array_values(array_map(fn ($i) => [
@@ -506,15 +539,15 @@ class TreatmentPlanBuilder
     private function newMedicationItem(): array
     {
         return [
-            'key'              => Uuid::v4()->toRfc4122(),
+            'key'              => (string) Uuid::v4(),
             'medicationId'     => '',
-            'variantId'        => '',
-            'titrationEnabled' => false,
-            'titrationPathId'  => '',
+            'variants'         => [
+                ['key' => (string) Uuid::v4(), 'variantId' => '', 'circuitBreaker' => false],
+            ],
             'quantityPerOrder' => 1,
             'prescription'     => [
-                'renewalMonths'                => '3',
-                'approvalRequiredOnDoseChange' => true,
+                'renewalEveryShipments'  => '3',
+                'approvalEveryShipments' => '3',
             ],
         ];
     }

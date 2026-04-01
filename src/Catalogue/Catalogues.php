@@ -337,6 +337,17 @@ final class Catalogues
         ];
     }
 
+    public static function shipmentFrequencyOptions(): array
+    {
+        return [
+            ['id' => '1',  'label' => 'Every shipment'],
+            ['id' => '2',  'label' => 'Every 2 shipments'],
+            ['id' => '3',  'label' => 'Every 3 shipments'],
+            ['id' => '6',  'label' => 'Every 6 shipments'],
+            ['id' => '12', 'label' => 'Every 12 shipments'],
+        ];
+    }
+
     // ── Inclusion / upsell cycle options ──────────────────────────────────────
 
     public static function inclusionCycleOptions(): array
