@@ -121,7 +121,6 @@
                         <div>
                             <p class="text-xs text-gray-500 mb-1">Duration</p>
                             <p class="text-sm font-semibold text-gray-900">~{{ (plan.cycleDays * plan.ordersTotal / 30)|round }} months</p>
-                            <p class="text-xs text-gray-400">{{ plan.ordersTotal }} shipments</p>
                         </div>
                         <div>
                             <p class="text-xs text-gray-500 mb-1">Shipment frequency</p>
@@ -143,42 +142,65 @@
                         </div>
                     </div>
 
-                    {# Prescribed medications #}
-                    <div class="px-4 sm:px-6 py-4 border-b border-gray-100">
-                        <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Prescribed medications</p>
-                        {% if plan.medications is not empty %}
-                            <ul class="space-y-2">
-                                {% for med in plan.medications %}
-                                    <li class="flex items-center gap-3 px-3 py-2.5 bg-gray-50 rounded-xl">
-                                        <svg class="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 12c0-1.232-.046-2.453-.138-3.662a4.006 4.006 0 00-3.7-3.7 48.678 48.678 0 00-7.324 0 4.006 4.006 0 00-3.7 3.7c-.017.22-.032.441-.046.662M19.5 12l3-3m-3 3l-3-3m-12 3c0 1.232.046 2.453.138 3.662a4.006 4.006 0 003.7 3.7 48.656 48.656 0 007.324 0 4.006 4.006 0 003.7-3.7c.017-.22.032-.441.046-.662M4.5 12l3 3m-3-3l-3 3"/>
-                                        </svg>
-                                        <p class="text-sm font-medium text-gray-900">{{ med.name }}</p>
-                                    </li>
-                                {% endfor %}
-                            </ul>
-                        {% else %}
-                            <p class="text-sm text-gray-400">No medications recorded</p>
-                        {% endif %}
-                    </div>
+                    {# Tabs: Medications / Inclusions #}
+                    <div x-data="{ tab: 'medications' }">
 
-                    {# Inclusions #}
-                    <div class="px-4 sm:px-6 py-4">
-                        <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Inclusions</p>
-                        {% if plan.inclusions is not empty %}
-                            <ul class="space-y-2">
-                                {% for item in plan.inclusions %}
-                                    <li class="flex items-start gap-3 px-3 py-2 bg-gray-50 rounded-xl">
-                                        <svg class="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
-                                        </svg>
-                                        <p class="text-sm text-gray-700">{{ item }}</p>
-                                    </li>
-                                {% endfor %}
-                            </ul>
-                        {% else %}
-                            <p class="text-sm text-gray-400">No inclusions recorded for this plan</p>
-                        {% endif %}
+                        {# Tab bar #}
+                        <div class="flex border-b border-gray-100">
+                            <button
+                                type="button"
+                                @click="tab = 'medications'"
+                                :class="tab === 'medications'
+                                    ? 'border-b-2 border-gray-900 text-gray-900 font-semibold'
+                                    : 'text-gray-500 hover:text-gray-700'"
+                                class="px-4 sm:px-6 py-3 text-sm transition-colors -mb-px"
+                            >Medications</button>
+                            <button
+                                type="button"
+                                @click="tab = 'inclusions'"
+                                :class="tab === 'inclusions'
+                                    ? 'border-b-2 border-gray-900 text-gray-900 font-semibold'
+                                    : 'text-gray-500 hover:text-gray-700'"
+                                class="px-4 sm:px-6 py-3 text-sm transition-colors -mb-px"
+                            >Inclusions</button>
+                        </div>
+
+                        {# Medications panel #}
+                        <div x-show="tab === 'medications'" class="px-4 sm:px-6 py-4">
+                            {% if plan.medications is not empty %}
+                                <ul class="space-y-2">
+                                    {% for med in plan.medications %}
+                                        <li class="flex items-center gap-3 px-3 py-2.5 bg-gray-50 rounded-xl">
+                                            <svg class="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 12c0-1.232-.046-2.453-.138-3.662a4.006 4.006 0 00-3.7-3.7 48.678 48.678 0 00-7.324 0 4.006 4.006 0 00-3.7 3.7c-.017.22-.032.441-.046.662M19.5 12l3-3m-3 3l-3-3m-12 3c0 1.232.046 2.453.138 3.662a4.006 4.006 0 003.7 3.7 48.656 48.656 0 007.324 0 4.006 4.006 0 003.7-3.7c.017-.22.032-.441.046-.662M4.5 12l3 3m-3-3l-3 3"/>
+                                            </svg>
+                                            <p class="text-sm font-medium text-gray-900">{{ med.name }}</p>
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                            {% else %}
+                                <p class="text-sm text-gray-400">No medications recorded</p>
+                            {% endif %}
+                        </div>
+
+                        {# Inclusions panel #}
+                        <div x-show="tab === 'inclusions'" class="px-4 sm:px-6 py-4">
+                            {% if plan.inclusions is not empty %}
+                                <ul class="space-y-2">
+                                    {% for item in plan.inclusions %}
+                                        <li class="flex items-start gap-3 px-3 py-2 bg-gray-50 rounded-xl">
+                                            <svg class="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                                            </svg>
+                                            <p class="text-sm text-gray-700">{{ item }}</p>
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                            {% else %}
+                                <p class="text-sm text-gray-400">No inclusions recorded for this plan</p>
+                            {% endif %}
+                        </div>
+
                     </div>
 
                 </div>
