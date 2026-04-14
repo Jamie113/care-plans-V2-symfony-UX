@@ -133,10 +133,6 @@
                             </p>
                         </div>
                         <div>
-                            <p class="text-xs text-gray-500 mb-1">Shipments sent</p>
-                            <p class="text-sm font-semibold text-gray-900">{{ plan.ordersCompleted }} / {{ plan.ordersTotal }}</p>
-                        </div>
-                        <div>
                             <p class="text-xs text-gray-500 mb-1">Start date</p>
                             <p class="text-sm font-semibold text-gray-900">{{ plan.startDate|date('d M Y') }}</p>
                         </div>
@@ -456,13 +452,22 @@
 
                         <div class="divide-y divide-gray-100">
 
-                            {# Next payment #}
+                            {# Billing type + next amount #}
                             <div class="px-4 sm:px-6 py-4">
-                                <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Next payment</p>
+                                <div class="flex items-center gap-2 mb-3">
+                                    {% if plan.billingMatchesOrder %}
+                                        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200">Per order billing</span>
+                                    {% else %}
+                                        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-violet-50 text-violet-700 border border-violet-200">Commitment based billing</span>
+                                    {% endif %}
+                                    {% if plan.discount %}
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-50 text-green-700 border border-green-200">{{ plan.discount }}</span>
+                                    {% endif %}
+                                </div>
                                 {% if plan.status in ['deactivated', 'expired'] %}
                                     <p class="text-sm text-gray-400 italic">No upcoming payment — plan is {{ plan.status }}</p>
                                 {% else %}
-                                    <div class="flex items-baseline gap-2 mb-1">
+                                    <div class="flex items-baseline gap-2">
                                         <span class="text-2xl font-bold {{ plan.paymentFailed ? 'text-red-600' : 'text-gray-900' }}">£{{ plan.nextPaymentAmount|number_format(2) }}</span>
                                         {% if plan.discount %}
                                             <span class="text-sm text-gray-400 line-through">£{{ plan.price|number_format(2) }}</span>
@@ -472,52 +477,48 @@
                                         {% endif %}
                                     </div>
                                     {% if plan.discount %}
-                                        <div class="flex items-center gap-1.5 mb-1.5">
-                                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-50 text-green-700 border border-green-200">{{ plan.discount }}</span>
-                                            <span class="text-xs text-gray-500">saving £{{ (plan.price - plan.nextPaymentAmount)|number_format(2) }}</span>
-                                        </div>
-                                    {% else %}
-                                        <p class="text-xs text-gray-400 mb-1.5">No discount applied</p>
-                                    {% endif %}
-                                    {% if plan.nextBillingDate %}
-                                        <p class="text-xs text-gray-500">Due <span class="font-medium text-gray-700">{{ plan.nextBillingDate|date('d M Y') }}</span></p>
+                                        <p class="text-xs text-gray-500 mt-0.5">saving £{{ (plan.price - plan.nextPaymentAmount)|number_format(2) }}</p>
                                     {% endif %}
                                 {% endif %}
                             </div>
 
                             {# Billing frequency #}
-                            <div class="px-4 sm:px-6 py-4">
-                                <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Billing frequency</p>
-                                <div class="space-y-3">
-                                    <div>
-                                        <p class="text-xs text-gray-500 mb-0.5">Basket value</p>
-                                        <p class="text-sm font-medium text-gray-900">£{{ plan.price|number_format(2) }} per order</p>
-                                    </div>
-                                    <div>
-                                        <p class="text-xs text-gray-500 mb-0.5">Billing cycle</p>
-                                        <p class="text-sm font-medium text-gray-900">Every {{ plan.billingCycleDays }} days</p>
-                                        {% if plan.billingMatchesOrder %}
-                                            <p class="text-xs text-gray-400">Billed with each order dispatch</p>
-                                        {% else %}
-                                            <p class="text-xs text-amber-600">Separate from order cycle (every {{ plan.cycleDays }} days)</p>
-                                        {% endif %}
-                                    </div>
+                            <div class="px-4 sm:px-6 py-4 space-y-2.5">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-xs text-gray-500">Billing cycle</span>
+                                    <span class="text-sm font-medium text-gray-900">Every {{ plan.billingCycleDays }} days</span>
                                 </div>
+                                {% if not plan.billingMatchesOrder %}
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-xs text-gray-500">Order cycle</span>
+                                        <span class="text-sm font-medium text-gray-900">Every {{ plan.cycleDays }} days</span>
+                                    </div>
+                                {% endif %}
+                                {% if plan.nextBillingDate and plan.status not in ['deactivated', 'expired'] %}
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-xs text-gray-500">Next billing date</span>
+                                        <span class="text-sm font-medium text-gray-900">{{ plan.nextBillingDate|date('d M Y') }}</span>
+                                    </div>
+                                {% endif %}
                             </div>
 
                             {# Last payment #}
                             <div class="px-4 sm:px-6 py-4">
-                                <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Last payment</p>
-                                <div class="flex items-center gap-3">
-                                    <p class="text-sm font-medium text-gray-900">£{{ plan.lastPaymentAmount|number_format(2) }}</p>
-                                    {% if plan.paymentFailed %}
-                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-50 text-red-700 border border-red-200">Failed</span>
-                                    {% elseif plan.lastPaymentAmount > 0 %}
-                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-50 text-green-700 border border-green-200">Paid</span>
-                                    {% endif %}
-                                    {% if plan.lastBillingDate %}
-                                        <span class="text-xs text-gray-500">{{ plan.lastBillingDate|date('d M Y') }}</span>
-                                    {% endif %}
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-xs text-gray-500">Last payment</span>
+                                        {% if plan.paymentFailed %}
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-50 text-red-700 border border-red-200">Failed</span>
+                                        {% elseif plan.lastPaymentAmount > 0 %}
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-50 text-green-700 border border-green-200">Paid</span>
+                                        {% endif %}
+                                    </div>
+                                    <div class="text-right">
+                                        <p class="text-sm font-medium text-gray-900">£{{ plan.lastPaymentAmount|number_format(2) }}</p>
+                                        {% if plan.lastBillingDate %}
+                                            <p class="text-xs text-gray-500">{{ plan.lastBillingDate|date('d M Y') }}</p>
+                                        {% endif %}
+                                    </div>
                                 </div>
                             </div>
 
@@ -532,174 +533,32 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/>
                                 </svg>
                             </div>
-                            <div>
-                                <h2 class="text-sm font-semibold text-gray-900">Actions</h2>
-                                <p class="text-xs text-gray-500">Manage this plan</p>
-                            </div>
+                            <h2 class="text-sm font-semibold text-gray-900">Actions</h2>
                         </div>
-
-                        <div class="p-4 sm:p-5 space-y-2">
-
-                            {# Change order date #}
-                            <details class="group rounded-xl border border-gray-200 overflow-hidden">
-                                <summary class="flex items-center gap-3 px-4 py-3 cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors [&::-webkit-details-marker]:hidden list-none">
-                                    <div class="w-7 h-7 bg-white border border-gray-200 rounded-lg flex items-center justify-center flex-shrink-0 group-open:border-gray-300">
-                                        <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                                        </svg>
-                                    </div>
-                                    <div class="flex-1 min-w-0">
-                                        <p class="text-sm font-medium text-gray-800">Change order date</p>
-                                        <p class="text-xs text-gray-500">Patient wants their next delivery on a different day</p>
-                                    </div>
-                                    <svg class="w-4 h-4 text-gray-400 flex-shrink-0 transition-transform group-open:rotate-90" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <div class="divide-y divide-gray-100">
+                            {% for action in [
+                                'Change order date',
+                                'Change billing date',
+                                'Change plan',
+                                'Change offer & billing',
+                                'Send one-off order'
+                            ] %}
+                                <button type="button" class="flex items-center justify-between w-full px-4 sm:px-6 py-3 text-sm font-medium text-gray-800 hover:bg-gray-50 transition-colors text-left">
+                                    {{ action }}
+                                    <svg class="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
                                     </svg>
-                                </summary>
-                                <div class="px-4 py-3 bg-white border-t border-gray-100 space-y-2">
-                                    <p class="text-xs text-gray-600">Use this if a patient calls asking to receive their next delivery on a different day — for example, they're going on holiday or won't be home to accept it.</p>
-                                    <p class="text-xs text-gray-400"><span class="font-medium text-gray-500">You'll need:</span> The new date they'd like · A brief reason if they gave one</p>
-                                    <div class="flex items-center gap-2 pt-1">
-                                        <button type="button" class="px-3 py-1.5 bg-gray-900 text-white rounded-lg text-xs font-medium hover:bg-gray-700 transition-colors">Continue →</button>
-                                        <span class="text-xs text-gray-400 italic">Not wired in prototype</span>
-                                    </div>
-                                </div>
-                            </details>
-
-                            {# Change billing date #}
-                            <details class="group rounded-xl border border-gray-200 overflow-hidden">
-                                <summary class="flex items-center gap-3 px-4 py-3 cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors [&::-webkit-details-marker]:hidden list-none">
-                                    <div class="w-7 h-7 bg-white border border-gray-200 rounded-lg flex items-center justify-center flex-shrink-0 group-open:border-gray-300">
-                                        <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
-                                        </svg>
-                                    </div>
-                                    <div class="flex-1 min-w-0">
-                                        <p class="text-sm font-medium text-gray-800">Change billing date</p>
-                                        <p class="text-xs text-gray-500">Patient wants their payment taken on a different date</p>
-                                    </div>
-                                    <svg class="w-4 h-4 text-gray-400 flex-shrink-0 transition-transform group-open:rotate-90" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
-                                    </svg>
-                                </summary>
-                                <div class="px-4 py-3 bg-white border-t border-gray-100 space-y-2">
-                                    <p class="text-xs text-gray-600">Use this if a patient wants to change when their payment comes out — for example, to match their payday or avoid a busy period in their account.</p>
-                                    <p class="text-xs text-gray-400"><span class="font-medium text-gray-500">You'll need:</span> The new date they'd like · Whether this is a one-off change or permanent</p>
-                                    <div class="flex items-center gap-2 pt-1">
-                                        <button type="button" class="px-3 py-1.5 bg-gray-900 text-white rounded-lg text-xs font-medium hover:bg-gray-700 transition-colors">Continue →</button>
-                                        <span class="text-xs text-gray-400 italic">Not wired in prototype</span>
-                                    </div>
-                                </div>
-                            </details>
-
-                            {# Change plan #}
-                            <details class="group rounded-xl border border-gray-200 overflow-hidden">
-                                <summary class="flex items-center gap-3 px-4 py-3 cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors [&::-webkit-details-marker]:hidden list-none">
-                                    <div class="w-7 h-7 bg-white border border-gray-200 rounded-lg flex items-center justify-center flex-shrink-0 group-open:border-gray-300">
-                                        <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-                                        </svg>
-                                    </div>
-                                    <div class="flex-1 min-w-0">
-                                        <p class="text-sm font-medium text-gray-800">Change plan</p>
-                                        <p class="text-xs text-gray-500">Patient wants to move to a different plan</p>
-                                    </div>
-                                    <svg class="w-4 h-4 text-gray-400 flex-shrink-0 transition-transform group-open:rotate-90" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
-                                    </svg>
-                                </summary>
-                                <div class="px-4 py-3 bg-white border-t border-gray-100 space-y-2">
-                                    <p class="text-xs text-gray-600">Use this if a patient wants to move to a longer or shorter plan — for example, upgrading from a 3-month to a 6-month plan. Only use this with approval from a clinician or supervisor if the medication is changing.</p>
-                                    <p class="text-xs text-gray-400"><span class="font-medium text-gray-500">You'll need:</span> Which plan they're moving to · When to switch (straight away or at the next renewal)</p>
-                                    <div class="flex items-center gap-2 pt-1">
-                                        <button type="button" class="px-3 py-1.5 bg-gray-900 text-white rounded-lg text-xs font-medium hover:bg-gray-700 transition-colors">Continue →</button>
-                                        <span class="text-xs text-gray-400 italic">Not wired in prototype</span>
-                                    </div>
-                                </div>
-                            </details>
-
-                            {# Change offer & billing #}
-                            <details class="group rounded-xl border border-gray-200 overflow-hidden">
-                                <summary class="flex items-center gap-3 px-4 py-3 cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors [&::-webkit-details-marker]:hidden list-none">
-                                    <div class="w-7 h-7 bg-white border border-gray-200 rounded-lg flex items-center justify-center flex-shrink-0 group-open:border-gray-300">
-                                        <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                        </svg>
-                                    </div>
-                                    <div class="flex-1 min-w-0">
-                                        <p class="text-sm font-medium text-gray-800">Change offer &amp; billing</p>
-                                        <p class="text-xs text-gray-500">Patient is on the wrong deal or wants different pricing</p>
-                                    </div>
-                                    <svg class="w-4 h-4 text-gray-400 flex-shrink-0 transition-transform group-open:rotate-90" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
-                                    </svg>
-                                </summary>
-                                <div class="px-4 py-3 bg-white border-t border-gray-100 space-y-2">
-                                    <p class="text-xs text-gray-600">Use this to move a patient onto a different deal — for example, if they've been offered a loyalty price, want to pay monthly instead of upfront, or were signed up on the wrong promotion.</p>
-                                    <p class="text-xs text-gray-400"><span class="font-medium text-gray-500">You'll need:</span> The offer or price they should be on · When the change should take effect</p>
-                                    <div class="flex items-center gap-2 pt-1">
-                                        <button type="button" class="px-3 py-1.5 bg-gray-900 text-white rounded-lg text-xs font-medium hover:bg-gray-700 transition-colors">Continue →</button>
-                                        <span class="text-xs text-gray-400 italic">Not wired in prototype</span>
-                                    </div>
-                                </div>
-                            </details>
-
-                            {# Send one-off order #}
-                            <details class="group rounded-xl border border-gray-200 overflow-hidden">
-                                <summary class="flex items-center gap-3 px-4 py-3 cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors [&::-webkit-details-marker]:hidden list-none">
-                                    <div class="w-7 h-7 bg-white border border-gray-200 rounded-lg flex items-center justify-center flex-shrink-0 group-open:border-gray-300">
-                                        <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
-                                        </svg>
-                                    </div>
-                                    <div class="flex-1 min-w-0">
-                                        <p class="text-sm font-medium text-gray-800">Send one-off order</p>
-                                        <p class="text-xs text-gray-500">Patient needs an extra delivery outside their usual schedule</p>
-                                    </div>
-                                    <svg class="w-4 h-4 text-gray-400 flex-shrink-0 transition-transform group-open:rotate-90" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
-                                    </svg>
-                                </summary>
-                                <div class="px-4 py-3 bg-white border-t border-gray-100 space-y-2">
-                                    <p class="text-xs text-gray-600">Use this to send an extra delivery that isn't part of the patient's regular plan — for example, if their last order was lost in the post, arrived damaged, or they urgently need a replacement. This won't change their regular schedule.</p>
-                                    <p class="text-xs text-gray-400"><span class="font-medium text-gray-500">You'll need:</span> What to send and the dose · When to send it · Whether to charge the patient or send it free of charge</p>
-                                    <div class="flex items-center gap-2 pt-1">
-                                        <button type="button" class="px-3 py-1.5 bg-gray-900 text-white rounded-lg text-xs font-medium hover:bg-gray-700 transition-colors">Continue →</button>
-                                        <span class="text-xs text-gray-400 italic">Not wired in prototype</span>
-                                    </div>
-                                </div>
-                            </details>
-
+                                </button>
+                            {% endfor %}
                         </div>
-
-                        {# Deactivate — separated, destructive #}
-                        <div class="px-4 sm:px-5 pb-4 sm:pb-5 border-t border-gray-100 pt-3">
-                            <details class="group rounded-xl border border-red-200 overflow-hidden">
-                                <summary class="flex items-center gap-3 px-4 py-3 cursor-pointer bg-red-50 hover:bg-red-100 transition-colors [&::-webkit-details-marker]:hidden list-none">
-                                    <div class="w-7 h-7 bg-white border border-red-200 rounded-lg flex items-center justify-center flex-shrink-0 group-open:border-red-300">
-                                        <svg class="w-4 h-4 text-red-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                        </svg>
-                                    </div>
-                                    <div class="flex-1 min-w-0">
-                                        <p class="text-sm font-medium text-red-700">Deactivate plan</p>
-                                        <p class="text-xs text-red-500">Fully stops the plan — no more deliveries or payments</p>
-                                    </div>
-                                    <svg class="w-4 h-4 text-red-400 flex-shrink-0 transition-transform group-open:rotate-90" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
-                                    </svg>
-                                </summary>
-                                <div class="px-4 py-3 bg-white border-t border-red-100 space-y-2">
-                                    <p class="text-xs text-gray-600">Use this only if the patient has asked to cancel, or if you've been instructed to by a clinician or supervisor. Deactivating stops all future orders and payments immediately. It can be reversed if needed.</p>
-                                    <p class="text-xs text-gray-400"><span class="font-medium text-gray-500">You'll need:</span> The reason for deactivating · Confirmation that the patient has been informed</p>
-                                    <div class="flex items-center gap-2 pt-1">
-                                        <button type="button" class="px-3 py-1.5 bg-red-600 text-white rounded-lg text-xs font-medium hover:bg-red-700 transition-colors">Continue →</button>
-                                        <span class="text-xs text-gray-400 italic">Not wired in prototype</span>
-                                    </div>
-                                </div>
-                            </details>
+                        <div class="px-4 sm:px-6 py-3 border-t border-gray-100">
+                            <button type="button" class="flex items-center justify-between w-full text-sm font-medium text-red-600 hover:text-red-700 transition-colors">
+                                Deactivate plan
+                                <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
+                                </svg>
+                            </button>
                         </div>
-
                     </div>
 
                     {# ══ Tags ════════════════════════════════════════════════════ #}
