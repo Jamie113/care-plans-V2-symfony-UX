@@ -142,29 +142,7 @@
                         </div>
                     </div>
 
-                    {# Shipment summary #}
-                    <div class="px-4 sm:px-6 py-3 border-b border-gray-100 flex items-center justify-between gap-4">
-                        <div class="flex items-center gap-8">
-                            <div>
-                                <p class="text-xs text-gray-500 mb-0.5">Next shipment</p>
-                                <p class="text-sm font-semibold text-gray-900">
-                                    {% if plan.nextOrderDate %}{{ plan.nextOrderDate|date('d M Y') }}{% else %}<span class="text-gray-400">—</span>{% endif %}
-                                </p>
-                            </div>
-                            <div>
-                                <p class="text-xs text-gray-500 mb-0.5">Last shipment</p>
-                                <p class="text-sm font-semibold text-gray-900">
-                                    {% if plan.lastOrderDate %}{{ plan.lastOrderDate|date('d M Y') }}{% else %}<span class="text-gray-400">—</span>{% endif %}
-                                </p>
-                            </div>
-                        </div>
-                        <a href="#" class="inline-flex items-center gap-1 text-xs font-medium text-blue-600 hover:text-blue-800 transition-colors flex-shrink-0">
-                            View all orders
-                            <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
-                        </a>
-                    </div>
-
-                    {# Tabs: Medications / Inclusions / Titration #}
+                    {# Tabs: Medications / Inclusions / Shipments / Titration #}
                     {% set isTitrating = false %}
                     {% for med in plan.medications %}
                         {% if med.isTitrating %}{% set isTitrating = true %}{% endif %}
@@ -190,6 +168,14 @@
                                     : 'text-gray-500 hover:text-gray-700'"
                                 class="px-4 sm:px-6 py-3 text-sm transition-colors -mb-px"
                             >Inclusions</button>
+                            <button
+                                type="button"
+                                @click="tab = 'shipments'"
+                                :class="tab === 'shipments'
+                                    ? 'border-b-2 border-gray-900 text-gray-900 font-semibold'
+                                    : 'text-gray-500 hover:text-gray-700'"
+                                class="px-4 sm:px-6 py-3 text-sm transition-colors -mb-px"
+                            >Shipments</button>
                             {% if isTitrating %}
                             <button
                                 type="button"
@@ -239,6 +225,28 @@
                             {% else %}
                                 <p class="text-sm text-gray-400">No inclusions recorded for this plan</p>
                             {% endif %}
+                        </div>
+
+                        {# Shipments panel #}
+                        <div x-show="tab === 'shipments'" class="px-4 sm:px-6 py-4 space-y-4">
+                            <div class="grid grid-cols-2 gap-4">
+                                <div class="px-4 py-3 bg-gray-50 rounded-xl">
+                                    <p class="text-xs text-gray-500 mb-1">Next shipment</p>
+                                    <p class="text-sm font-semibold text-gray-900">
+                                        {% if plan.nextOrderDate %}{{ plan.nextOrderDate|date('d M Y') }}{% else %}<span class="text-gray-400">—</span>{% endif %}
+                                    </p>
+                                </div>
+                                <div class="px-4 py-3 bg-gray-50 rounded-xl">
+                                    <p class="text-xs text-gray-500 mb-1">Last shipment</p>
+                                    <p class="text-sm font-semibold text-gray-900">
+                                        {% if plan.lastOrderDate %}{{ plan.lastOrderDate|date('d M Y') }}{% else %}<span class="text-gray-400">—</span>{% endif %}
+                                    </p>
+                                </div>
+                            </div>
+                            <a href="#" class="inline-flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium text-blue-700 border border-dashed border-blue-300 rounded-xl hover:bg-blue-50 hover:border-blue-400 transition-colors w-full justify-center">
+                                View all orders for this plan
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+                            </a>
                         </div>
 
                         {# Titration panel #}
