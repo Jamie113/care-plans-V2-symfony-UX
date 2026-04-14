@@ -39,38 +39,55 @@
                     <h2 class="text-sm font-semibold text-gray-900">Patient details</h2>
                 </div>
             </div>
-            <div class="p-4 sm:p-6 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-x-6 gap-y-4">
-                <div>
-                    <p class="text-xs text-gray-500 mb-1">Full name</p>
-                    <p class="text-sm font-medium text-gray-900">{{ patient.name }}</p>
+            <div class="p-4 sm:p-6 space-y-4">
+                <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-x-6 gap-y-4">
+                    <div>
+                        <p class="text-xs text-gray-500 mb-1">Full name</p>
+                        <p class="text-sm font-medium text-gray-900">{{ patient.name }}</p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-gray-500 mb-1">Email</p>
+                        <p class="text-sm text-gray-900">{{ patient.email }}</p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-gray-500 mb-1">Phone</p>
+                        <p class="text-sm text-gray-900">{{ patient.phone }}</p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-gray-500 mb-1">Date of birth</p>
+                        <p class="text-sm text-gray-900">{{ patient.dob|date('d M Y') }}</p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-gray-500 mb-1">Gender</p>
+                        <p class="text-sm text-gray-900">{{ patient.gender }}</p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-gray-500 mb-1">Customer ID</p>
+                        <p class="text-sm font-mono text-gray-900">{{ patient.customerId }}</p>
+                    </div>
                 </div>
-                <div>
-                    <p class="text-xs text-gray-500 mb-1">Email</p>
-                    <p class="text-sm text-gray-900">{{ patient.email }}</p>
-                </div>
-                <div>
-                    <p class="text-xs text-gray-500 mb-1">Phone</p>
-                    <p class="text-sm text-gray-900">{{ patient.phone }}</p>
-                </div>
-                <div>
-                    <p class="text-xs text-gray-500 mb-1">Date of birth</p>
-                    <p class="text-sm text-gray-900">{{ patient.dob|date('d M Y') }}</p>
-                </div>
-                <div>
-                    <p class="text-xs text-gray-500 mb-1">Gender</p>
-                    <p class="text-sm text-gray-900">{{ patient.gender }}</p>
-                </div>
-                <div>
-                    <p class="text-xs text-gray-500 mb-1">Customer ID</p>
-                    <p class="text-sm font-mono text-gray-900">{{ patient.customerId }}</p>
-                </div>
+                {% if patient.tags is not empty %}
+                    <div class="pt-3 border-t border-gray-100">
+                        <p class="text-xs text-gray-500 mb-2">Tags</p>
+                        <div class="flex flex-wrap gap-2">
+                            {% for tag in patient.tags %}
+                                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium bg-gray-100 text-gray-700 border border-gray-200">
+                                    <svg class="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14"/>
+                                    </svg>
+                                    {{ tag }}
+                                </span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% endif %}
             </div>
         </div>
 
         {# ══ Quick links ════════════════════════════════════════════════════════ #}
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
 
-            <a href="#" class="flex items-center gap-4 p-4 sm:p-5 bg-white rounded-2xl border border-gray-200 shadow-sm hover:border-blue-300 hover:shadow-md transition-all group">
+            <a href="https://doctor.staging.manual-co.dev/admin/app/application/patient/1279470/show" target="_blank" rel="noopener noreferrer" class="flex items-center gap-4 p-4 sm:p-5 bg-white rounded-2xl border border-gray-200 shadow-sm hover:border-blue-300 hover:shadow-md transition-all group">
                 <div class="flex items-center justify-center w-10 h-10 bg-blue-50 rounded-xl flex-shrink-0 group-hover:bg-blue-100 transition-colors">
                     <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414A1 1 0 0119 9.414V19a2 2 0 01-2 2z"/>
@@ -85,7 +102,7 @@
                 </svg>
             </a>
 
-            <a href="#" class="flex items-center gap-4 p-4 sm:p-5 bg-white rounded-2xl border border-gray-200 shadow-sm hover:border-amber-300 hover:shadow-md transition-all group">
+            <a href="https://doctor.staging.manual-co.dev/admin/weight-loss-orders/list" target="_blank" rel="noopener noreferrer" class="flex items-center gap-4 p-4 sm:p-5 bg-white rounded-2xl border border-gray-200 shadow-sm hover:border-amber-300 hover:shadow-md transition-all group">
                 <div class="flex items-center justify-center w-10 h-10 bg-amber-50 rounded-xl flex-shrink-0 group-hover:bg-amber-100 transition-colors">
                     <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
@@ -100,7 +117,7 @@
                 </svg>
             </a>
 
-            <a href="#" class="flex items-center gap-4 p-4 sm:p-5 bg-white rounded-2xl border border-gray-200 shadow-sm hover:border-green-300 hover:shadow-md transition-all group">
+            <a href="https://shop.staging.manual-co.dev/likeaboss/customers/1727301/orders" target="_blank" rel="noopener noreferrer" class="flex items-center gap-4 p-4 sm:p-5 bg-white rounded-2xl border border-gray-200 shadow-sm hover:border-green-300 hover:shadow-md transition-all group">
                 <div class="flex items-center justify-center w-10 h-10 bg-green-50 rounded-xl flex-shrink-0 group-hover:bg-green-100 transition-colors">
                     <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>

@@ -70,6 +70,8 @@ final class AdminPatientStub
             }
         }
 
+        $tags = array_values(array_unique(array_merge(...array_map(fn($p) => $p['tags'] ?? [], $allPlans))));
+
         return [
             'customerId' => $currentPlan['customerId'],
             'name'       => $currentPlan['patientName'],
@@ -77,6 +79,7 @@ final class AdminPatientStub
             'phone'      => $currentPlan['patientPhone'],
             'dob'        => $currentPlan['patientDob'],
             'gender'     => $currentPlan['gender'],
+            'tags'       => $tags,
             'plans'      => $allPlans,
         ];
     }
