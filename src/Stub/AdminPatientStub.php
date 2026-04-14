@@ -8,7 +8,7 @@ final class AdminPatientStub
     {
         return [
             self::make('PLN-001', 'CUS-001', 'Weightloss', 89.00, 1,  'Sarah Mitchell',   'sarah.mitchell@email.com',  '07700 900 123', '1988-03-12', 'WL Starter 6 Month',       'Mounjaro',  '2.5mg',  'active',            '2026-01-15', '2026-04-03', '2026-03-06', '2026-04-03', '2026-03-06', 3,  6,  28, 89.00,  null,            [['2026-03-28', 'order_date_changed',  'Order date changed from 28 Mar to 3 Apr',   'Admin'],  ['2026-03-06', 'order_dispatched', 'Order #3 dispatched', 'System'], ['2026-02-06', 'order_dispatched', 'Order #2 dispatched', 'System'], ['2026-01-15', 'plan_started', 'Plan started', 'System']], '2.5mg', '5mg', 89.00, false, '2026-07-02', [['ORD-003','TRK-SM003','delivered','2026-03-06','Mounjaro 2.5mg ×1'],['ORD-002','TRK-SM002','delivered','2026-02-06','Mounjaro 2.5mg ×1'],['ORD-001','TRK-SM001','delivered','2026-01-15','Mounjaro 2.5mg ×1']], 'F', [], 0, [], null, ['influencer', 'vip']),
-            self::make('PLN-002', 'CUS-002', 'Weightloss', 134.10, 2,  'James Thornton',   'j.thornton@gmail.com',      '07700 900 456', '1979-07-22', 'WL Advanced 12 Month',     'Wegovy',    '0.25mg', 'active',            '2025-11-01', '2026-04-06', '2026-03-09', '2026-04-06', '2026-03-09', 5,  13, 28, 149.00, '10% loyalty',   [['2026-03-29', 'discount_applied',   '10% loyalty discount applied',              'Admin'],  ['2026-03-09', 'order_dispatched', 'Order #5 dispatched', 'System'], ['2026-02-09', 'order_dispatched', 'Order #4 dispatched', 'System'], ['2025-11-01', 'plan_started', 'Plan started', 'System']], '0.25mg', '0.5mg', 149.00, false, '2026-10-31', [['ORD-005','TRK-JT005','in-transit','2026-03-09','Wegovy 0.25mg ×1'],['ORD-004','TRK-JT004','delivered','2026-02-09','Wegovy 0.25mg ×1']], 'M', [], 0, [['Vitamin B12 booster', 14.99, 'active', '2026-04-06'], ['Mindful eating programme', 9.99, 'active', '2026-04-06']], null, ['discount-group-a', 'loyalty']),
+            self::make('PLN-002', 'CUS-002', 'Weightloss', 134.10, 2,  'James Thornton',   'j.thornton@gmail.com',      '07700 900 456', '1979-07-22', 'WL Advanced 12 Month',     'Wegovy',    '0.25mg', 'active',            '2025-11-01', '2026-04-06', '2026-03-09', '2026-04-06', '2026-03-09', 5,  13, 28, 149.00, '10% loyalty',   [['2026-03-29', 'discount_applied',   '10% loyalty discount applied',              'Admin'],  ['2026-03-09', 'order_dispatched', 'Order #5 dispatched', 'System'], ['2026-02-09', 'order_dispatched', 'Order #4 dispatched', 'System'], ['2025-11-01', 'plan_started', 'Plan started', 'System']], '0.25mg', '0.5mg', 149.00, false, '2026-10-31', [['ORD-005','TRK-JT005','in-transit','2026-03-09','Wegovy 0.25mg ×1'],['ORD-004','TRK-JT004','delivered','2026-02-09','Wegovy 0.25mg ×1']], 'M', [], 0, [['Vitamin B12 booster', 14.99, 'active', '2026-04-06'], ['Mindful eating programme', 9.99, 'active', '2026-04-06']], null, ['discount-group-a', 'loyalty'], ['type' => 'RAF', 'addedBy' => 'jamie@manual.co', 'addedAt' => '2026-03-29']),
         ];
     }
 
@@ -146,6 +146,7 @@ final class AdminPatientStub
         array $upsells = [],
         ?string $patientRequestedDose = null,
         array $tags = [],
+        ?array $discountDetail = null,  // ['type' => 'RAF', 'addedBy' => 'jamie@manual.co']
     ): array {
         // Derive inclusions from category when not explicitly provided
         if (empty($inclusions)) {
@@ -191,6 +192,7 @@ final class AdminPatientStub
             'cycleDays'        => $cycleDays,
             'price'            => $price,
             'discount'         => $discount,
+            'discountDetail'   => $discountDetail,
             'activity'         => array_map(fn($a) => [
                 'date'        => $a[0],
                 'type'        => $a[1],
